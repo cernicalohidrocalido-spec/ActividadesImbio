@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from '../lib/leaflet-fix';
 import type { Actividad } from '../lib/types';
 import { TIPO_COLOR_HEX } from '../lib/types';
@@ -8,6 +8,15 @@ import { useTipos } from '../lib/tipos';
 import type { TipoColor } from '../lib/types';
 
 const PABELLON_CENTER: [number, number] = [22.1493, -102.2761];
+
+function InvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const t = window.setTimeout(() => map.invalidateSize(), 80);
+    return () => window.clearTimeout(t);
+  }, [map]);
+  return null;
+}
 
 // Caché de iconos: misma combinación → mismo DivIcon
 const iconCache = new Map<string, L.DivIcon>();
@@ -146,7 +155,7 @@ const TILE_LAYERS = {
 
 export default function MapView({
   actividades,
-  height = 'calc(100vh - 220px)',
+  height = 'min(640px, calc(100vh - 200px))',
   onEdit,
   onDelete,
 }: Props) {
@@ -169,8 +178,8 @@ export default function MapView({
 
   return (
     <div
-      className="rounded-lg overflow-hidden border border-default-200 relative"
-      style={{ height }}
+      className="rounded-lg overflow-hidden border border-[#c8d9ee] relative bg-[#E8F1FB]"
+      style={{ height, minHeight: 420 }}
     >
       <MapContainer
         center={center}
@@ -179,6 +188,7 @@ export default function MapView({
         wheelPxPerZoomLevel={WHEEL_PX_PER_ZOOM}
         style={{ height: '100%', width: '100%', zIndex: 0 }}
       >
+        <InvalidateSize />
         <TileLayer attribution={tiles.attr} url={tiles.url} />
         <LayerToggle layer={layer} onChange={setLayer} />
 

@@ -62,8 +62,19 @@ button[data-variant="primary"]:hover,
 .nav-imbio {
   background: var(--imbio-dark);
   color: #fff;
-  min-height: 60px;
+  min-height: 76px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logo-escudo {
+  height: 64px;
+  width: 64px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 5px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
 }
 
 .sidebar-imbio a.active {

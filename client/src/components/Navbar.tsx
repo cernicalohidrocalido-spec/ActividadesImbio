@@ -3,12 +3,12 @@ import { useAuth } from '../lib/auth';
 export default function AppNavbar() {
   const { username, logout } = useAuth();
   return (
-    <header className="nav-imbio flex items-center justify-between px-4 sm:px-5 py-2 gap-3 flex-wrap">
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="nav-imbio flex items-center justify-between px-4 sm:px-5 py-2.5 gap-3 flex-wrap">
+      <div className="flex items-center gap-3.5 min-w-0">
         <img
           src="/logo-pabellon.png"
-          alt="Pabellón de Arteaga"
-          className="h-10 w-10 object-contain shrink-0 bg-white rounded-md p-0.5"
+          alt="H. Ayuntamiento de Pabellón de Arteaga"
+          className="logo-escudo"
         />
         <div className="flex flex-col leading-tight min-w-0">
           <p className="font-bold text-[1.05rem] truncate">

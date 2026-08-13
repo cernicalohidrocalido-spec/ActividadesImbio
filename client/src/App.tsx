@@ -179,6 +179,20 @@ export default function App() {
             <Spinner size="lg" />
             <p className="text-sm text-default-500">Cargando actividades...</p>
           </div>
+        ) : view === 'map' ? (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-16">
+                <Spinner />
+              </div>
+            }
+          >
+            <MapView
+              actividades={actividades}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </Suspense>
         ) : empty ? (
           <EmptyState className="py-16">
             <div className="text-center flex flex-col items-center gap-3">
@@ -200,7 +214,7 @@ export default function App() {
               </Button>
             </div>
           </EmptyState>
-        ) : view === 'cards' ? (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {actividades.map((a) => (
               <ActivityCard
@@ -211,20 +225,6 @@ export default function App() {
               />
             ))}
           </div>
-        ) : (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center py-16">
-                <Spinner />
-              </div>
-            }
-          >
-            <MapView
-              actividades={actividades}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </Suspense>
         )}
 
       <ActivityForm

@@ -25,9 +25,11 @@ export default function LoginPage() {
     <div className="login-screen">
       <div className="login-card">
         <div className="text-center mb-6">
-          <div className="text-5xl leading-none mb-2" aria-hidden>
-            🌿
-          </div>
+          <img
+            src="/logo-pabellon.png"
+            alt="H. Ayuntamiento de Pabellón de Arteaga"
+            className="h-24 w-24 object-contain mx-auto mb-3 bg-white rounded-2xl p-2 shadow-sm"
+          />
           <h1 className="text-[1.25rem] font-bold text-[#002A5C] leading-snug">
             Manejo de Áreas Verdes — IMBIO Pabellón de Arteaga
           </h1>
