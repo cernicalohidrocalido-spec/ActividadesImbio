@@ -109,17 +109,33 @@ export async function deleteActividad(id: number): Promise<void> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
+async function fileToBase64(file: File): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(new Error('No se pudo leer la foto'));
+    reader.readAsDataURL(file);
+  });
+  const comma = dataUrl.indexOf(',');
+  return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+}
+
 export async function uploadFotos(actividadId: number, files: File[]): Promise<Foto[]> {
   const { compressImage } = await import('./compress-image');
-  const form = new FormData();
+  const fotos = [];
   for (const f of files) {
     const ready = await compressImage(f).catch(() => f);
-    form.append('fotos', ready, ready.name || 'foto.jpg');
+    fotos.push({
+      filename: ready.name || 'foto.jpg',
+      mime: ready.type || 'image/jpeg',
+      data: await fileToBase64(ready),
+    });
   }
   const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos`, {
     ...fetchOpts,
     method: 'POST',
-    body: form,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fotos }),
   });
   const data = await jsonOrThrow<{ fotos: Foto[] }>(res);
   if (!data.fotos?.length) {

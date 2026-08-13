@@ -128,45 +128,49 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
   // Solo tipos activos para selección
   const tiposActivos = tiposConfig.filter((t) => t.activo);
 
+  const formKey = actividad?.id ?? 'new';
+  const loadedKey = useRef<string | number | null>(null);
+
   useEffect(() => {
-    if (open) {
-      setErrorMsg(null);
-      const partes = parseDireccion(actividad?.direccion ?? '');
-      setNombre(actividad?.nombre ?? '');
-      // Mantener los tipos que existan en la config; si está vacío, tomar el primero activo
-      const fromActividad = actividad?.tiposIntervencion ?? [];
-      const filtered = fromActividad.filter((k) =>
-        tiposConfig.some((t) => t.key === k && t.activo)
-      );
-      setTipos(
-        filtered.length > 0
-          ? filtered
-          : tiposConfig.find((t) => t.activo)?.key
-            ? [tiposConfig.find((t) => t.activo)!.key]
-            : []
-      );
-      setFecha(actividad ? toInputDate(actividad.fecha) : toInputDate(new Date().toISOString()));
-      setRealizadaPor(actividad?.realizadaPor ?? '');
-      setCalle(partes.calle);
-      setNumero(partes.numero);
-      setColonia(partes.colonia);
-      setReferencia(partes.referencia);
-      setDescripcion(actividad?.descripcion ?? '');
-      setPos(actividad ? { lat: actividad.lat, lng: actividad.lng } : null);
-      setFotos(actividad?.fotos ?? []);
-      setPendingFiles([]);
-      setMatlachoSugerencia(null);
-      setMatlachoError(null);
-      setFotosReady(true);
-      void getHealth()
-        .then((h) => setFotosReady(h.fotos !== 'none'))
-        .catch(() => setFotosReady(true));
-      // El próximo cambio de pos es el inicial (cargado de la actividad o null),
-      // no debe disparar geocoding automático
-      skipNextPosChange.current = true;
+    if (!open) {
+      loadedKey.current = null;
+      return;
     }
+    if (loadedKey.current === formKey) return;
+    loadedKey.current = formKey;
+    setErrorMsg(null);
+    const partes = parseDireccion(actividad?.direccion ?? '');
+    setNombre(actividad?.nombre ?? '');
+    const fromActividad = actividad?.tiposIntervencion ?? [];
+    const filtered = fromActividad.filter((k) =>
+      tiposConfig.some((t) => t.key === k && t.activo)
+    );
+    setTipos(
+      filtered.length > 0
+        ? filtered
+        : tiposConfig.find((t) => t.activo)?.key
+          ? [tiposConfig.find((t) => t.activo)!.key]
+          : []
+    );
+    setFecha(actividad ? toInputDate(actividad.fecha) : toInputDate(new Date().toISOString()));
+    setRealizadaPor(actividad?.realizadaPor ?? '');
+    setCalle(partes.calle);
+    setNumero(partes.numero);
+    setColonia(partes.colonia);
+    setReferencia(partes.referencia);
+    setDescripcion(actividad?.descripcion ?? '');
+    setPos(actividad ? { lat: actividad.lat, lng: actividad.lng } : null);
+    setFotos(actividad?.fotos ?? []);
+    setPendingFiles([]);
+    setMatlachoSugerencia(null);
+    setMatlachoError(null);
+    setFotosReady(true);
+    void getHealth()
+      .then((h) => setFotosReady(h.fotos !== 'none'))
+      .catch(() => setFotosReady(true));
+    skipNextPosChange.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, actividad, tiposConfig.length]);
+  }, [open, formKey, tiposConfig.length]);
 
   // Auto-rellenar dirección cuando el usuario mueve/selecciona el pin
   useEffect(() => {
@@ -227,14 +231,13 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
         try {
           const uploaded = await uploadFotos(saved.id, pendingFiles);
           saved = { ...saved, fotos: [...saved.fotos, ...uploaded] };
+          setPendingFiles([]);
+          setFotos(saved.fotos);
         } catch (photoErr) {
           const photoMsg =
             photoErr instanceof Error ? photoErr.message : 'No se pudo subir la foto';
-          setErrorMsg(
-            `La actividad se guardó, pero la foto no: ${photoMsg}`
-          );
+          setErrorMsg(`La actividad se guardó, pero la foto no: ${photoMsg}`);
           toastError('Foto no subida', photoMsg);
-          onSaved(saved);
           return;
         }
       }
@@ -565,8 +568,26 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                       onChange={(e) => {
                         const target = e.target as HTMLInputElement;
                         const files = Array.from(target.files ?? []);
-                        setPendingFiles((prev) => [...prev, ...files]);
                         target.value = '';
+                        if (files.length === 0) return;
+                        if (isEdit && actividad) {
+                          setErrorMsg(null);
+                          setSaving(true);
+                          void uploadFotos(actividad.id, files)
+                            .then((uploaded) => {
+                              setFotos((prev) => [...prev, ...uploaded]);
+                              success('Foto guardada');
+                            })
+                            .catch((err) => {
+                              const msg =
+                                err instanceof Error ? err.message : 'No se pudo subir la foto';
+                              setErrorMsg(msg);
+                              toastError('Foto no subida', msg);
+                            })
+                            .finally(() => setSaving(false));
+                          return;
+                        }
+                        setPendingFiles((prev) => [...prev, ...files]);
                       }}
                       className="mt-1 block w-full text-sm text-default-700
                         file:mr-3 file:py-1.5 file:px-3
@@ -579,7 +600,9 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     <span className="text-xs text-default-500 mt-1 block">
                       {pendingFiles.length > 0
                         ? `${pendingFiles.length} archivo(s) pendiente(s) — se subirán al guardar`
-                        : 'JPG, PNG o WebP. Máx 10MB por foto.'}
+                        : isEdit
+                          ? 'La foto se guarda al elegirla. JPG, PNG o WebP.'
+                          : 'JPG, PNG o WebP. Se subirán al crear la actividad.'}
                     </span>
                   </label>
 
