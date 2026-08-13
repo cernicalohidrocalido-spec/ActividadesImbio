@@ -14,6 +14,10 @@ const fetchOpts: RequestInit = { credentials: 'include' };
 async function jsonOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
+    const looksHtml = /^\s*</.test(text);
+    if (looksHtml || res.status === 502 || res.status === 504) {
+      throw new Error('El servidor no respondió a tiempo. Espera un minuto y vuelve a intentar.');
+    }
     let msg = text || `HTTP ${res.status}`;
     try {
       const j = JSON.parse(text) as { error?: string };

@@ -29,11 +29,24 @@ function buildPrompt(input: z.infer<typeof bodySchema>): string {
 
 const GEMINI_MODELS = [
   process.env.GEMINI_MODEL?.trim(),
+  'gemini-3.5-flash',
   'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-flash-latest',
-  'gemini-2.0-flash-001',
 ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
+
+type GeminiPart = { text?: string; thought?: boolean };
+type GeminiResponse = {
+  error?: { message?: string };
+  candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
+};
+
+function extractGeminiText(data: GeminiResponse): string {
+  const parts = data.candidates?.[0]?.content?.parts ?? [];
+  return parts
+    .filter((p) => !p.thought && p.text)
+    .map((p) => p.text!.trim())
+    .join('\n')
+    .trim();
+}
 
 async function callGemini(prompt: string, key: string): Promise<string> {
   let lastErr = 'Gemini no disponible';
@@ -43,21 +56,26 @@ async function callGemini(prompt: string, key: string): Promise<string> {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(18_000),
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 280, temperature: 0.35 },
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.35 },
         }),
       }
     );
-    const data = (await res.json()) as {
-      error?: { message?: string };
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
+    const raw = await res.text();
+    let data: GeminiResponse = {};
+    try {
+      data = JSON.parse(raw) as GeminiResponse;
+    } catch {
+      lastErr = `Gemini HTTP ${res.status}`;
+      continue;
+    }
     if (!res.ok) {
       lastErr = data.error?.message || `Gemini HTTP ${res.status}`;
       continue;
     }
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const text = extractGeminiText(data);
     if (!text) {
       lastErr = 'Matlacho no devolvió texto';
       continue;
