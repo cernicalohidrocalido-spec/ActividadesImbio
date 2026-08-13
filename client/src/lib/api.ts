@@ -14,18 +14,17 @@ const fetchOpts: RequestInit = { credentials: 'include' };
 async function jsonOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
+    try {
+      const j = JSON.parse(text) as { error?: string };
+      if (j.error) throw new Error(j.error);
+    } catch (e) {
+      if (!(e instanceof SyntaxError)) throw e;
+    }
     const looksHtml = /^\s*</.test(text);
     if (looksHtml || res.status === 502 || res.status === 504) {
       throw new Error('El servidor no respondió a tiempo. Espera un minuto y vuelve a intentar.');
     }
-    let msg = text || `HTTP ${res.status}`;
-    try {
-      const j = JSON.parse(text) as { error?: string };
-      if (j.error) msg = j.error;
-    } catch {
-      /* texto plano */
-    }
-    throw new Error(msg);
+    throw new Error(text || `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
