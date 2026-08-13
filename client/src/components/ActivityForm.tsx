@@ -20,7 +20,7 @@ import {
   Spinner,
 } from '@heroui/react';
 import type { Actividad, ActividadInput, Foto } from '../lib/types';
-import { toInputDate } from '../lib/format';
+import { localDateToIso, toInputDate, todayInputDate } from '../lib/format';
 import { createActividad, updateActividad, uploadFotos, deleteFoto, mejorarDescripcion, getHealth } from '../lib/api';
 import { success, error as toastError } from '../lib/toast';
 import { useTipos } from '../lib/tipos';
@@ -92,7 +92,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
 
   const [nombre, setNombre] = useState('');
   const [tipos, setTipos] = useState<string[]>([]);
-  const [fecha, setFecha] = useState<string>(toInputDate(new Date().toISOString()));
+  const [fecha, setFecha] = useState<string>(todayInputDate());
   const [realizadaPor, setRealizadaPor] = useState('');
   const [calle, setCalle] = useState('');
   const [numero, setNumero] = useState('');
@@ -154,7 +154,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
           ? [tiposConfig.find((t) => t.activo)!.key]
           : []
     );
-    setFecha(actividad ? toInputDate(actividad.fecha) : toInputDate(new Date().toISOString()));
+    setFecha(actividad ? toInputDate(actividad.fecha) : todayInputDate());
     setRealizadaPor(actividad?.realizadaPor ?? '');
     setCalle(partes.calle);
     setNumero(partes.numero);
@@ -216,7 +216,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       const payload: ActividadInput = {
         nombre: nombre.trim(),
         tiposIntervencion: tipos,
-        fecha: new Date(fecha).toISOString(),
+        fecha: localDateToIso(fecha),
         realizadaPor: realizadaPor.trim(),
         direccion,
         descripcion: descripcion.trim(),
@@ -411,16 +411,23 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     <Label>Equipo o nombre de quien realizó la actividad</Label>
                     <Input placeholder="Ej. Cuadrilla de deshierbe / Ana Karen" />
                   </TextField>
-                  <TextField
-                    value={fecha}
-                    onChange={(v) => setFecha(extractValue(v))}
-                    isRequired
-                    fullWidth
-                  >
-                    <Label>Fecha de la actividad</Label>
-                    <Input type="date" />
-                    <Description>Día en que se realizó la actividad.</Description>
-                  </TextField>
+                  <div className="w-full">
+                    <label className="text-sm font-medium text-[#002A5C]" htmlFor="actividad-fecha">
+                      Fecha de la actividad <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="actividad-fecha"
+                      type="date"
+                      required
+                      value={fecha}
+                      max={todayInputDate()}
+                      onChange={(e) => setFecha(e.target.value)}
+                      className="mt-1 w-full h-10 rounded-lg border border-default-200 bg-white px-3 text-sm text-[#002A5C] outline-none focus:ring-2 focus:ring-[#1976D2]"
+                    />
+                    <p className="mt-1 text-xs text-default-500">
+                      Día en que se realizó la actividad.
+                    </p>
+                  </div>
                 </div>
 
                 {/* ===== Ubicación (mapa) ===== */}
