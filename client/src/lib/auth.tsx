@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getMe, login as apiLogin, logout as apiLogout } from './api';
-import { isPublicPanelPath } from './public-path';
+import { isLoginPath } from './public-path';
 
 interface AuthContextValue {
   username: string | null;
@@ -23,10 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (isPublicPanelPath()) {
-      setReady(true);
-      return;
-    }
     getMe()
       .then((me) => setUsername(me.username))
       .catch(() => setUsername(null))
@@ -36,11 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (user: string, password: string) => {
     const me = await apiLogin(user, password);
     setUsername(me.username);
+    if (isLoginPath()) window.history.replaceState(null, '', '/');
   }, []);
 
   const logout = useCallback(async () => {
     await apiLogout().catch(() => {});
     setUsername(null);
+    window.history.replaceState(null, '', '/consulta');
+    window.location.assign('/consulta');
   }, []);
 
   return (

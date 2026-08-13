@@ -85,9 +85,9 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-[#4b5563] mt-5">
-          ¿Solo quieres consultar las actividades?{' '}
+          Acceso solo para personal IMBIO.{' '}
           <a href="/consulta" className="font-semibold text-[#003B7A] hover:underline">
-            Ver consulta pública
+            Volver a la consulta pública
           </a>
         </p>
       </div>

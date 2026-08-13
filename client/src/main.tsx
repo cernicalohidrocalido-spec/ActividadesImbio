@@ -6,17 +6,21 @@ import LoginPage from './components/LoginPage';
 import { toastQueue } from './lib/toast';
 import { AuthProvider, useAuth } from './lib/auth';
 import { TiposProvider } from './lib/tipos';
-import { isPublicPanelPath } from './lib/public-path';
+import { isLoginPath, isPublicPanelPath } from './lib/public-path';
 import './index.css';
+
+function PublicPanel() {
+  return (
+    <TiposProvider publicOnly>
+      <PublicApp />
+    </TiposProvider>
+  );
+}
 
 function Gate() {
   const { username, ready } = useAuth();
   if (isPublicPanelPath()) {
-    return (
-      <TiposProvider publicOnly>
-        <PublicApp />
-      </TiposProvider>
-    );
+    return <PublicPanel />;
   }
   if (!ready) {
     return (
@@ -25,12 +29,15 @@ function Gate() {
       </div>
     );
   }
-  if (!username) return <LoginPage />;
-  return (
-    <TiposProvider>
-      <App />
-    </TiposProvider>
-  );
+  if (username) {
+    return (
+      <TiposProvider>
+        <App />
+      </TiposProvider>
+    );
+  }
+  if (isLoginPath()) return <LoginPage />;
+  return <PublicPanel />;
 }
 
 createRoot(document.getElementById('root')!).render(

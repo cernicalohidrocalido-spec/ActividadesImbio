@@ -51,6 +51,15 @@ await app.register(fastifyStatic, {
   wildcard: false,
 });
 
+async function sendSpa(reply: { header: (k: string, v: string) => unknown; sendFile: (file: string, root: string) => unknown }) {
+  reply.header('Cache-Control', 'no-store');
+  return reply.sendFile('index.html', clientDist);
+}
+
+for (const page of ['/consulta', '/publico', '/login']) {
+  app.get(page, async (_req, reply) => sendSpa(reply));
+}
+
 app.get('/api/health', async () => ({
   ok: true,
   ts: new Date().toISOString(),
@@ -85,7 +94,7 @@ await app.register(publicoRoutes);
 
 app.setNotFoundHandler((req, reply) => {
   if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
-    return reply.sendFile('index.html', clientDist);
+    return sendSpa(reply);
   }
   reply.status(404).send({ error: 'No encontrado' });
 });

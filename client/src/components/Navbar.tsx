@@ -15,7 +15,7 @@ export default function AppNavbar({ publicMode = false }: { publicMode?: boolean
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {publicMode ? (
           <a
-            href="/"
+            href="/login"
             className="border border-white/40 text-white text-xs sm:text-sm rounded-md px-2.5 py-1 hover:bg-white/10"
           >
             Acceso personal
