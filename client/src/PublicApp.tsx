@@ -1,13 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import {
-  Card,
-  CardContent,
   Spinner,
   EmptyState,
   Avatar,
 } from '@heroui/react';
 import ActivityCard from './components/ActivityCard';
-import ActivityFilters from './components/ActivityFilters';
 import AppNavbar from './components/Navbar';
 import { listActividadesPublico } from './lib/api';
 import { error } from './lib/toast';
@@ -45,29 +42,14 @@ export default function PublicApp() {
 
   return (
     <div className="min-h-screen bg-[#f0f4fa]">
-      <AppNavbar publicMode view={view} onViewChange={setView} />
-      <main className="p-4 sm:p-5 space-y-4" style={{ paddingTop: 88 }}>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] leading-snug">
-              Bitácora Ambiental de Actividades del IMBIO
-            </h1>
-            <p className="text-sm text-[#4b5563]">
-              Actividades de áreas verdes · Consulta pública · {actividades.length}{' '}
-              actividad(es)
-            </p>
-          </div>
-
-          <Card>
-            <CardContent>
-              <ActivityFilters
-                filters={filters}
-                onChange={setFilters}
-                onClear={() => setFilters({})}
-                total={actividades.length}
-              />
-            </CardContent>
-          </Card>
-
+      <AppNavbar
+        publicMode
+        view={view}
+        onViewChange={setView}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
+      <main className="p-4 sm:p-5 space-y-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Spinner size="lg" />
