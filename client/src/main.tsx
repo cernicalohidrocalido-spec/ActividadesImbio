@@ -11,8 +11,8 @@ function Gate() {
   const { username, ready } = useAuth();
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner color="success" size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-[#002A5C]">
+        <Spinner size="lg" />
       </div>
     );
   }

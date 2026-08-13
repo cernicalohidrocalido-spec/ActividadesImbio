@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { Button, Card, CardContent, Input, Label, TextField } from '@heroui/react';
 import { useAuth } from '../lib/auth';
 
 export default function LoginPage() {
@@ -23,54 +22,66 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-emerald-50">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardContent className="p-8 space-y-6">
-          <div className="flex flex-col items-center text-center gap-3">
-            <img
-              src="/logo-pabellon.png"
-              alt="Pabellón de Arteaga"
-              className="h-16 w-16 object-contain"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-emerald-800">IMBIO</h1>
-              <p className="text-sm text-default-500">
-                Registro de actividades · personal autorizado
-              </p>
-            </div>
+    <div className="login-screen">
+      <div className="login-card">
+        <div className="text-center mb-6">
+          <div className="text-5xl leading-none mb-2" aria-hidden>
+            🌿
           </div>
+          <h1 className="text-[1.25rem] font-bold text-[#002A5C] leading-snug">
+            Manejo de Áreas Verdes — IMBIO Pabellón de Arteaga
+          </h1>
+          <p className="text-sm text-[#4b5563] mt-2">
+            Instituto Municipal de Biodiversidad y Protección Ambiental de
+            Pabellón de Arteaga
+          </p>
+        </div>
 
-          <form onSubmit={onSubmit} className="space-y-4">
-            <TextField>
-              <Label>Usuario</Label>
-              <Input
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername((e.target as HTMLInputElement).value)}
-                required
-              />
-            </TextField>
-            <TextField>
-              <Label>Contraseña</Label>
-              <Input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
-                required
-              />
-            </TextField>
+        <div className="login-hint mb-5">
+          ✓ Conectado. Introduce usuario y contraseña e inicia sesión.
+        </div>
 
-            {error ? (
-              <p className="text-sm text-danger-600 bg-danger-50 rounded-md px-3 py-2">{error}</p>
-            ) : null}
+        <form onSubmit={onSubmit} className="space-y-4">
+          <label className="block">
+            <span className="block text-sm font-semibold text-[#1a202c] mb-1.5">
+              Usuario
+            </span>
+            <input
+              className="input-imbio"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </label>
+          <label className="block">
+            <span className="block text-sm font-semibold text-[#1a202c] mb-1.5">
+              Contraseña
+            </span>
+            <input
+              className="input-imbio"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
 
-            <Button type="submit" variant="primary" className="w-full" isPending={busy}>
-              {busy ? 'Entrando…' : 'Entrar'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          {error ? (
+            <p className="text-sm text-[#991b1b] bg-[#fee2e2] border border-[#fca5a5] rounded-lg px-3 py-2">
+              {error}
+            </p>
+          ) : null}
+
+          <button type="submit" className="btn-login" disabled={busy}>
+            <span className="lock" aria-hidden>
+              🔐
+            </span>
+            {busy ? 'Entrando…' : 'Iniciar Sesión'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

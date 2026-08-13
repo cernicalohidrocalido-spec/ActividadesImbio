@@ -229,7 +229,7 @@ export default function MapView({
                         <button
                           type="button"
                           onClick={() => onEdit(a)}
-                          className="flex-1 px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                          className="flex-1 px-2 py-1 text-xs rounded bg-[#E8F1FB] text-[#002A5C] hover:bg-[#d6e7f8] border border-[#B3CFF0]"
                         >
                           ✏️ Editar
                         </button>

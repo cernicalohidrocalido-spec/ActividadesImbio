@@ -400,7 +400,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     </p>
                     {geocoding && (
                       <span className="text-xs text-default-500 flex items-center gap-1">
-                        <Spinner size="sm" color="success" /> Detectando dirección...
+                        <Spinner size="sm" /> Detectando dirección...
                       </span>
                     )}
                   </div>
@@ -473,8 +473,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                         file:mr-3 file:py-1.5 file:px-3
                         file:rounded-md file:border-0
                         file:text-sm file:font-medium
-                        file:bg-success-50 file:text-success-700
-                        hover:file:bg-success-100
+                        file:bg-[#E8F1FB] file:text-[#003B7A]
+                        hover:file:bg-[#d6e7f8]
                         cursor-pointer"
                     />
                     <span className="text-xs text-default-500 mt-1 block">

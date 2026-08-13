@@ -35,7 +35,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <button
               type="button"
               onClick={() => this.setState({ error: null })}
-              className="mt-4 px-3 py-1.5 bg-emerald-600 text-white rounded text-sm"
+              className="mt-4 px-3 py-1.5 bg-[#003B7A] text-white rounded text-sm"
             >
               Reintentar
             </button>

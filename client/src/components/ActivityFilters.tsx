@@ -171,9 +171,9 @@ export default function ActivityFilters({
             <PopoverTrigger>
               <button
                 type="button"
-                className={`w-full h-10 px-3 rounded-field border transition-colors flex items-center justify-between text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-success ${
+                className={`w-full h-10 px-3 rounded-field border transition-colors flex items-center justify-between text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#1976D2] ${
                   tiposOpen || selectedTipoKeys.size > 0
-                    ? 'border-success bg-success-50'
+                    ? 'border-[#003B7A] bg-[#E8F1FB]'
                     : 'border-default-200 bg-default-100 hover:bg-default-200'
                 }`}
                 aria-label="Filtrar por tipo de intervención"
@@ -310,7 +310,7 @@ export default function ActivityFilters({
             variant="secondary"
             onPress={onDownloadExcel}
             isDisabled={total === 0}
-            className="bg-emerald-50 text-emerald-700 border-emerald-200 data-[hover=true]:bg-emerald-100"
+            className="bg-[#E8F1FB] text-[#002A5C] border-[#B3CFF0] data-[hover=true]:bg-[#d6e7f8]"
           >
             📊 Excel
           </Button>
@@ -320,7 +320,7 @@ export default function ActivityFilters({
             isPending={pdfLoading}
             onPress={onDownloadPDF}
             isDisabled={!filters.mes}
-            className="bg-emerald-600 data-[hover=true]:bg-emerald-700"
+            className="bg-[#003B7A] data-[hover=true]:bg-[#0057B8]"
           >
             {pdfLoading ? null : '📄  '}Reporte PDF
           </Button>

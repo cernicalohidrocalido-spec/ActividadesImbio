@@ -14,6 +14,7 @@ import ActivityCard from './components/ActivityCard';
 import ActivityFilters from './components/ActivityFilters';
 import ActivityForm from './components/ActivityForm';
 import AppNavbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import { listActividades, deleteActividad, downloadReportePDF, downloadReporteExcel } from './lib/api';
 import { success, error, warning } from './lib/toast';
 import type { Actividad, ListFilters } from './lib/types';
@@ -124,25 +125,28 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <div className="min-h-screen flex flex-col bg-[#f0f4fa]">
       <AppNavbar />
+      <div className="flex flex-1 min-h-0">
+      <Sidebar view={view} onChange={setView} />
 
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-4">
+      <main className="flex-1 p-4 sm:p-5 space-y-4 overflow-y-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-emerald-800">
-              Registro de actividades
+            <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] flex items-center gap-2">
+              <span aria-hidden>🌿</span> Registro de actividades
             </h1>
-            <p className="text-sm text-default-500">
+            <p className="text-sm text-[#4b5563]">
               {actividades.length} actividad(es) · {filters.mes}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <ButtonGroup>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ButtonGroup className="md:hidden">
               <Button
                 variant={view === 'cards' ? 'primary' : 'secondary'}
                 onPress={() => setView('cards')}
               >
-                🗂️ Cards
+                🗂️ Lista
               </Button>
               <Button
                 variant={view === 'map' ? 'primary' : 'secondary'}
@@ -172,7 +176,7 @@ export default function App() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Spinner color="success" size="lg" />
+            <Spinner size="lg" />
             <p className="text-sm text-default-500">Cargando actividades...</p>
           </div>
         ) : empty ? (
@@ -180,16 +184,15 @@ export default function App() {
             <div className="text-center flex flex-col items-center gap-3">
               <Avatar
                 size="lg"
-                color="success"
                 variant="soft"
                 className="shrink-0"
               >
-                <Avatar.Fallback className="text-4xl bg-success-100">
+                <Avatar.Fallback className="text-4xl bg-[#E8F1FB]">
                   📭
                 </Avatar.Fallback>
               </Avatar>
-              <h3 className="text-xl font-semibold">No hay actividades</h3>
-              <p className="text-sm text-default-500">
+              <h3 className="text-xl font-semibold text-[#002A5C]">No hay actividades</h3>
+              <p className="text-sm text-[#4b5563]">
                 Ajusta los filtros o registra la primera actividad del periodo.
               </p>
               <Button variant="primary" onPress={handleNew}>
@@ -212,7 +215,7 @@ export default function App() {
           <Suspense
             fallback={
               <div className="flex items-center justify-center py-16">
-                <Spinner color="success" />
+                <Spinner />
               </div>
             }
           >
@@ -223,7 +226,6 @@ export default function App() {
             />
           </Suspense>
         )}
-      </div>
 
       <ActivityForm
         open={formOpen}
@@ -231,6 +233,9 @@ export default function App() {
         actividad={editing}
         onSaved={handleSaved}
       />
+      </main>
+      </div>
+      </div>
     </ErrorBoundary>
   );
 }

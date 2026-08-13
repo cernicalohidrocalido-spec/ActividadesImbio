@@ -40,8 +40,8 @@ export default function ActivityCard({ actividad, onEdit, onDelete }: Props) {
           )}
         </div>
       ) : (
-        <div className="w-full h-20 rounded-t-large bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
-          <p className="text-sm font-medium text-emerald-700">Sin fotografías</p>
+        <div className="w-full h-20 rounded-t-large bg-gradient-to-br from-[#E8F1FB] to-[#f0f4fa] flex items-center justify-center">
+          <p className="text-sm font-medium text-[#003B7A]">Sin fotografías</p>
         </div>
       )}
 
