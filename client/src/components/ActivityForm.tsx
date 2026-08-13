@@ -189,11 +189,9 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     reverseGeocode(pos.lat, pos.lng)
       .then((g) => {
         if (cancelled || !g) return;
-        // Solo rellenamos si el usuario aún no ha escrito en esos campos
-        // (calle y colonia vacíos) — referencia siempre la respetamos
-        setCalle((prev) => (prev.trim() === '' && g.calle ? g.calle : prev));
-        setNumero((prev) => (prev.trim() === '' && g.numero ? g.numero : prev));
-        setColonia((prev) => (prev.trim() === '' && g.colonia ? g.colonia : prev));
+        if (g.calle) setCalle(g.calle);
+        setNumero(g.numero || 's/n');
+        if (g.colonia) setColonia(g.colonia);
       })
       .finally(() => {
         if (!cancelled) setGeocoding(false);
@@ -425,6 +423,41 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                   </TextField>
                 </div>
 
+                {/* ===== Ubicación (mapa) ===== */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium">
+                      Ubicación <span className="text-danger">*</span>
+                    </p>
+                    {geocoding && (
+                      <span className="text-xs text-default-500 flex items-center gap-1">
+                        <Spinner size="sm" /> Detectando dirección...
+                      </span>
+                    )}
+                  </div>
+                  <Description className="mb-2">
+                    Haz clic en el mapa o arrastra el pin. Calle, número y colonia se
+                    completan solos; puedes corregirlos abajo.
+                  </Description>
+                  <Suspense
+                    fallback={
+                      <div
+                        className="rounded-lg border border-default-200 flex items-center justify-center text-sm text-default-500"
+                        style={{ height: 500 }}
+                      >
+                        Cargando mapa...
+                      </div>
+                    }
+                  >
+                    <LocationPicker value={pos} onChange={setPos} height={500} />
+                  </Suspense>
+                  {pos && (
+                    <p className="text-xs text-default-500 mt-1">
+                      📍 {pos.lat.toFixed(5)}, {pos.lng.toFixed(5)}
+                    </p>
+                  )}
+                </div>
+
                 {/* ===== Dirección: Calle + Número ===== */}
                 <div>
                   <p className="text-sm font-medium mb-2">Dirección</p>
@@ -436,7 +469,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                       fullWidth
                     >
                       <Label>Calle</Label>
-                      <Input placeholder="Av. Hidalgo" />
+                      <Input placeholder="Se llena al elegir el punto en el mapa" />
                     </TextField>
                     <TextField
                       value={numero}
@@ -457,7 +490,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     fullWidth
                   >
                     <Label>Colonia</Label>
-                    <Input placeholder="Centro" />
+                    <Input placeholder="Se llena al elegir el punto en el mapa" />
                   </TextField>
                   <TextField
                     value={referencia}
@@ -519,41 +552,6 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                       </div>
                     </div>
                   ) : null}
-                </div>
-
-                {/* ===== Ubicación (mapa) ===== */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium">
-                      Ubicación <span className="text-danger">*</span>
-                    </p>
-                    {geocoding && (
-                      <span className="text-xs text-default-500 flex items-center gap-1">
-                        <Spinner size="sm" /> Detectando dirección...
-                      </span>
-                    )}
-                  </div>
-                  <Description className="mb-2">
-                    Haz click en el mapa o arrastra el pin para ajustar la posición.
-                    La dirección se auto-rellena, pero puedes editarla.
-                  </Description>
-                  <Suspense
-                    fallback={
-                      <div
-                        className="rounded-lg border border-default-200 flex items-center justify-center text-sm text-default-500"
-                        style={{ height: 500 }}
-                      >
-                        Cargando mapa...
-                      </div>
-                    }
-                  >
-                    <LocationPicker value={pos} onChange={setPos} height={500} />
-                  </Suspense>
-                  {pos && (
-                    <p className="text-xs text-default-500 mt-1">
-                      📍 {pos.lat.toFixed(5)}, {pos.lng.toFixed(5)}
-                    </p>
-                  )}
                 </div>
 
                 <Separator className="my-2" />

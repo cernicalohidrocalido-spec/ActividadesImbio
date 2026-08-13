@@ -13,6 +13,7 @@ interface NominatimAddress {
   road?: string;
   pedestrian?: string;
   path?: string;
+  street?: string;
   house_number?: string;
   neighbourhood?: string;
   suburb?: string;
@@ -20,6 +21,10 @@ interface NominatimAddress {
   hamlet?: string;
   residential?: string;
   city_district?: string;
+  village?: string;
+  town?: string;
+  municipality?: string;
+  county?: string;
 }
 
 interface NominatimResponse {
@@ -46,7 +51,7 @@ export async function reverseGeocode(
     const data = (await res.json()) as NominatimResponse;
     const a = data.address ?? {};
     return {
-      calle: a.road ?? a.pedestrian ?? a.path ?? '',
+      calle: a.road ?? a.pedestrian ?? a.path ?? a.street ?? '',
       numero: a.house_number ?? '',
       colonia:
         a.neighbourhood ??
@@ -54,7 +59,10 @@ export async function reverseGeocode(
         a.quarter ??
         a.residential ??
         a.hamlet ??
+        a.village ??
         a.city_district ??
+        a.town ??
+        a.municipality ??
         '',
       referencia: '',
       displayName: data.display_name ?? '',
