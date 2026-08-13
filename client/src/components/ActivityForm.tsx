@@ -635,7 +635,13 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                   Cancelar
                 </Button>
                 <Button variant="primary" onPress={handleSave} isPending={saving}>
-                  {isEdit ? 'Guardar cambios' : 'Crear actividad'}
+                  {saving
+                    ? pendingFiles.length > 0
+                      ? 'Subiendo foto…'
+                      : 'Guardando…'
+                    : isEdit
+                      ? 'Guardar cambios'
+                      : 'Crear actividad'}
                 </Button>
               </ButtonGroup>
             </ModalFooter>

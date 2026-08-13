@@ -113,7 +113,8 @@ export async function uploadFotos(actividadId: number, files: File[]): Promise<F
   const { compressImage } = await import('./compress-image');
   const form = new FormData();
   for (const f of files) {
-    form.append('fotos', await compressImage(f));
+    const ready = await compressImage(f).catch(() => f);
+    form.append('fotos', ready, ready.name || 'foto.jpg');
   }
   const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos`, {
     ...fetchOpts,
@@ -121,6 +122,9 @@ export async function uploadFotos(actividadId: number, files: File[]): Promise<F
     body: form,
   });
   const data = await jsonOrThrow<{ fotos: Foto[] }>(res);
+  if (!data.fotos?.length) {
+    throw new Error('El servidor no guardó la foto. Intenta de nuevo.');
+  }
   return data.fotos;
 }
 

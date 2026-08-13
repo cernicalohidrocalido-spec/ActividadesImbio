@@ -28,11 +28,22 @@ export function isCloudinaryConfigured(): boolean {
   );
 }
 
+function parseCloudinaryUrl(url: string): {
+  cloud_name: string;
+  api_key: string;
+  api_secret: string;
+} | null {
+  const m = url.match(/^cloudinary:\/\/([^:]+):([^@]+)@([^/]+)/);
+  if (!m) return null;
+  return { api_key: m[1], api_secret: m[2], cloud_name: m[3] };
+}
+
 async function getClient() {
-  cleanCloudinaryUrl();
+  const url = cleanCloudinaryUrl();
   const { v2 } = await import('cloudinary');
-  if (process.env.CLOUDINARY_URL?.startsWith('cloudinary://')) {
-    v2.config({ secure: true });
+  const parsed = url ? parseCloudinaryUrl(url) : null;
+  if (parsed) {
+    v2.config({ ...parsed, secure: true });
   } else {
     v2.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -63,7 +74,11 @@ export async function uploadImageBuffer(
       },
       (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
         if (err || !result) {
-          reject(err ?? new Error('Cloudinary no devolvió resultado'));
+          const msg =
+            err?.message ||
+            (err as { error?: { message?: string } } | undefined)?.error?.message ||
+            'Cloudinary no devolvió resultado';
+          reject(new Error(msg));
           return;
         }
         resolve(result);

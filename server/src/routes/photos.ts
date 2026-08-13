@@ -126,6 +126,11 @@ export async function photoRoutes(app: FastifyInstance) {
         }
       }
 
+      if (created.length === 0) {
+        return reply.status(400).send({
+          error: 'No se recibió ninguna foto. Vuelve a elegir el archivo y guarda de nuevo.',
+        });
+      }
       return reply.status(201).send({ fotos: created });
     }
   );

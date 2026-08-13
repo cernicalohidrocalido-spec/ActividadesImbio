@@ -27,6 +27,7 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './uploads';
 
 const app = Fastify({
   logger: { level: 'info' },
+  bodyLimit: 12 * 1024 * 1024,
 });
 
 await app.register(cors, {
@@ -35,7 +36,7 @@ await app.register(cors, {
 });
 
 await app.register(multipart, {
-  limits: { fileSize: 10 * 1024 * 1024, files: 20 },
+  limits: { fileSize: 12 * 1024 * 1024, files: 20, fieldSize: 12 * 1024 * 1024 },
 });
 
 await app.register(fastifyStatic, {
@@ -102,7 +103,15 @@ app.setNotFoundHandler((req, reply) => {
 app.setErrorHandler((err: FastifyError, req, reply) => {
   req.log.error(err);
   const status = err.statusCode ?? 500;
-  reply.status(status).send({ error: err.message ?? 'Error interno del servidor' });
+  const tooBig =
+    status === 413 ||
+    err.code === 'FST_ERR_CTP_BODY_TOO_LARGE' ||
+    /too large|limit/i.test(err.message ?? '');
+  reply.status(status).send({
+    error: tooBig
+      ? 'La foto es demasiado grande. Prueba con una imagen más pequeña (máx. 10 MB).'
+      : (err.message ?? 'Error interno del servidor'),
+  });
 });
 
 try {
