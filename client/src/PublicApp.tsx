@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import {
   Spinner,
   EmptyState,
@@ -9,7 +9,7 @@ import AppNavbar from './components/Navbar';
 import { listActividadesPublico } from './lib/api';
 import { error } from './lib/toast';
 import type { Actividad, ListFilters } from './lib/types';
-import { currentMonth } from './lib/format';
+import { currentMonth, groupByWeek } from './lib/format';
 
 const MapView = lazy(() => import('./components/MapView'));
 
@@ -37,6 +37,11 @@ export default function PublicApp() {
     void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.mes, filters.tipo, filters.q, filters.desde, filters.hasta]);
+
+  const weeks = useMemo(
+    () => groupByWeek(actividades, (a) => a.fecha),
+    [actividades]
+  );
 
   const empty = !loading && actividades.length === 0;
 
@@ -80,9 +85,27 @@ export default function PublicApp() {
               </div>
             </EmptyState>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actividades.map((a) => (
-                <ActivityCard key={a.id} actividad={a} />
+            <div className="space-y-8">
+              {weeks.map((week) => (
+                <section key={week.key} aria-labelledby={`semana-${week.key}`}>
+                  <div className="flex items-end justify-between gap-3 mb-3 border-b border-[#B3CFF0] pb-2">
+                    <h2
+                      id={`semana-${week.key}`}
+                      className="text-base sm:text-lg font-bold text-[#002A5C]"
+                    >
+                      {week.label}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#4b5563] shrink-0">
+                      {week.items.length} actividad
+                      {week.items.length === 1 ? '' : 'es'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {week.items.map((a) => (
+                      <ActivityCard key={a.id} actividad={a} />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
