@@ -12,12 +12,12 @@ const ITEMS: { id: ViewMode; icon: string; label: string }[] = [
 
 export default function Sidebar({ view, onChange }: Props) {
   return (
-    <aside className="sidebar-imbio hidden md:flex w-52 shrink-0 flex-col bg-[#002A5C] py-3">
+    <aside className="sidebar-imbio hidden md:flex w-56 shrink-0 flex-col bg-[#002A5C] pt-1">
       {ITEMS.map((item) => (
         <a
           key={item.id}
           href={`#${item.id}`}
-          className={`flex items-center gap-2.5 px-5 py-3.5 text-[0.95rem] text-white/80 hover:bg-white/10 hover:text-white ${
+          className={`flex items-center gap-2.5 px-5 py-3 text-[0.95rem] text-white/80 hover:bg-white/10 hover:text-white ${
             view === item.id ? 'active' : ''
           }`}
           onClick={(e) => {
@@ -31,6 +31,13 @@ export default function Sidebar({ view, onChange }: Props) {
           {item.label}
         </a>
       ))}
+      <div className="mt-auto px-4 pb-5 pt-4 flex justify-center">
+        <img
+          src="/logo-pabellon.png"
+          alt="H. Ayuntamiento de Pabellón de Arteaga"
+          className="logo-escudo-sidebar"
+        />
+      </div>
     </aside>
   );
 }
