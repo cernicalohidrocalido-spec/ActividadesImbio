@@ -90,6 +90,9 @@ function PublicHeader({
 
   const set = (patch: Partial<ListFilters>) => onFiltersChange({ ...filters, ...patch });
 
+  const viewBtn =
+    'inline-flex items-center justify-center gap-1.5 min-h-10 px-3 rounded-md text-sm font-semibold';
+
   return (
     <header className="nav-imbio nav-public-fixed px-3 sm:px-5">
       <div className="flex items-center justify-between gap-2 sm:gap-4">
@@ -97,46 +100,64 @@ function PublicHeader({
           <img
             src="/logo-pabellon.png"
             alt="H. Ayuntamiento de Pabellón de Arteaga"
-            className="h-10 w-10 sm:h-11 sm:w-11 object-contain bg-white rounded-lg p-0.5 shrink-0"
+            className="h-9 w-9 sm:h-11 sm:w-11 object-contain bg-white rounded-lg p-0.5 shrink-0"
           />
           <div className="min-w-0 leading-tight">
             <p className="font-bold text-[13px] sm:text-[0.95rem] leading-snug">
               Bitácora Ambiental de Actividades del IMBIO
             </p>
-            <p className="text-[11px] text-white/80 truncate">Actividades de áreas verdes</p>
+            <p className="text-[11px] text-white/80 truncate hidden sm:block">
+              Actividades de áreas verdes
+            </p>
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => onViewChange?.('cards')}
-            className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
-              view === 'cards' ? 'bg-white text-[#002A5C]' : 'text-white/90 hover:bg-white/10'
-            }`}
-          >
-            🌿{' '}
-            <span className="hidden sm:inline">Actividades de áreas verdes</span>
-            <span className="sm:hidden">Áreas verdes</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onViewChange?.('map')}
-            className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
-              view === 'map' ? 'bg-white text-[#002A5C]' : 'text-white/90 hover:bg-white/10'
-            }`}
-          >
-            🗺️ <span className="hidden sm:inline">Mapa</span>
-          </button>
-        </nav>
-
         <a
           href="/login"
-          className="shrink-0 border border-white/40 text-white text-xs sm:text-sm rounded-md px-2.5 py-1 hover:bg-white/10"
+          className="shrink-0 border border-white/40 text-white text-xs sm:text-sm rounded-md px-2.5 py-1.5 hover:bg-white/10"
         >
-          Acceso personal
+          <span className="sm:hidden">Acceso</span>
+          <span className="hidden sm:inline">Acceso personal</span>
         </a>
       </div>
+
+      <nav className="grid grid-cols-2 gap-2 mt-2.5">
+        <button
+          type="button"
+          onClick={() => onViewChange?.('cards')}
+          className={`${viewBtn} ${
+            view === 'cards' ? 'bg-white text-[#002A5C]' : 'bg-white/15 text-white hover:bg-white/25'
+          }`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 3.2c.4 2.2 1.7 4 3.2 5.4 1.4 1.3 2.6 2.8 2.6 4.7a5.8 5.8 0 1 1-11.6 0c0-1.9 1.2-3.4 2.6-4.7C10.3 7.2 11.6 5.4 12 3.2Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Actividades
+        </button>
+        <button
+          type="button"
+          onClick={() => onViewChange?.('map')}
+          className={`${viewBtn} ${
+            view === 'map' ? 'bg-white text-[#002A5C]' : 'bg-white/15 text-white hover:bg-white/25'
+          }`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M9 4.5 3.5 6.7v12.8L9 17.3l6 2.2 5.5-2.2V4.5L15 6.7 9 4.5Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path d="M9 4.5v12.8M15 6.7v12.8" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+          Mapa
+        </button>
+      </nav>
 
       <div className="nav-public-filters flex flex-wrap items-center gap-2 mt-2.5">
         <input
