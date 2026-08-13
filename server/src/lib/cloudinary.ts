@@ -2,25 +2,7 @@ import type { UploadApiResponse } from 'cloudinary';
 
 const FOLDER = 'imbio/areas-verdes';
 
-function cleanCloudinaryUrl(): string | undefined {
-  const raw = (process.env.CLOUDINARY_URL ?? '')
-    .trim()
-    .replace(/^['"]|['"]$/g, '')
-    .replace(/^CLOUDINARY_URL\s*=\s*/i, '')
-    .replace(/[<>]/g, '')
-    .trim();
-  if (raw.startsWith('cloudinary://')) {
-    process.env.CLOUDINARY_URL = raw;
-    return raw;
-  }
-  if (raw) {
-    delete process.env.CLOUDINARY_URL;
-  }
-  return undefined;
-}
-
 export function isCloudinaryConfigured(): boolean {
-  if (cleanCloudinaryUrl()) return true;
   return Boolean(
     process.env.CLOUDINARY_CLOUD_NAME &&
       process.env.CLOUDINARY_API_KEY &&
@@ -28,63 +10,18 @@ export function isCloudinaryConfigured(): boolean {
   );
 }
 
-function parseCloudinaryUrl(url: string): {
-  cloud_name: string;
-  api_key: string;
-  api_secret: string;
-} | null {
-  const m = url.match(/^cloudinary:\/\/([^:]+):([^@]+)@([^/]+)/);
-  if (!m) return null;
-  return { api_key: m[1], api_secret: m[2], cloud_name: m[3] };
-}
-
 async function getClient() {
-  const url = cleanCloudinaryUrl();
+  if (!isCloudinaryConfigured()) {
+    throw new Error('Cloudinary no está configurado');
+  }
   const { v2 } = await import('cloudinary');
-  const parsed = url ? parseCloudinaryUrl(url) : null;
-  if (parsed) {
-    process.env.CLOUDINARY_CLOUD_NAME = parsed.cloud_name;
-    process.env.CLOUDINARY_API_KEY = parsed.api_key;
-    process.env.CLOUDINARY_API_SECRET = parsed.api_secret;
-    process.env.CLOUDINARY_URL = `cloudinary://${parsed.api_key}:${parsed.api_secret}@${parsed.cloud_name}`;
-    v2.config({
-      cloud_name: parsed.cloud_name,
-      api_key: parsed.api_key,
-      api_secret: parsed.api_secret,
-      secure: true,
-    });
-  } else {
-    v2.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-      secure: true,
-    });
-  }
+  v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
   return v2;
-}
-
-function sniffMime(buffer: Buffer): string {
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'image/jpeg';
-  }
-  if (
-    buffer.length >= 8 &&
-    buffer[0] === 0x89 &&
-    buffer[1] === 0x50 &&
-    buffer[2] === 0x4e &&
-    buffer[3] === 0x47
-  ) {
-    return 'image/png';
-  }
-  if (
-    buffer.length >= 12 &&
-    buffer.toString('ascii', 0, 4) === 'RIFF' &&
-    buffer.toString('ascii', 8, 12) === 'WEBP'
-  ) {
-    return 'image/webp';
-  }
-  return 'image/jpeg';
 }
 
 function cloudinaryErrMessage(err: unknown): string {
@@ -106,18 +43,23 @@ export async function uploadImageBuffer(
     throw new Error('La foto llegó vacía. Vuelve a elegir el archivo.');
   }
   const cloudinary = await getClient();
-  const mime = sniffMime(buffer);
-  const dataUri = `data:${mime};base64,${buffer.toString('base64')}`;
-  try {
-    return await cloudinary.uploader.upload(dataUri, {
-      folder: FOLDER,
-      public_id: publicId,
-      resource_type: 'image',
-      overwrite: true,
-    });
-  } catch (err) {
-    throw new Error(cloudinaryErrMessage(err));
-  }
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: FOLDER,
+        public_id: publicId,
+        resource_type: 'image',
+      },
+      (err, result) => {
+        if (err || !result) {
+          reject(new Error(cloudinaryErrMessage(err)));
+          return;
+        }
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
 }
 
 export async function destroyImage(publicId: string): Promise<void> {
