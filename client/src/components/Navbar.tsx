@@ -1,6 +1,7 @@
 import { useAuth } from '../lib/auth';
 import { useTipos } from '../lib/tipos';
 import type { ListFilters } from '../lib/types';
+import { listWeekOptions } from '../lib/format';
 
 type ViewMode = 'cards' | 'map';
 
@@ -87,6 +88,12 @@ function PublicHeader({
       label: new Date(year, i, 1).toLocaleDateString('es-MX', { month: 'long' }),
     };
   });
+  const semanas = listWeekOptions(year);
+  const selectedWeek =
+    filters.desde && filters.hasta
+      ? (semanas.find((s) => s.desde === filters.desde && s.hasta === filters.hasta)?.value ??
+        filters.desde)
+      : TODOS;
 
   const set = (patch: Partial<ListFilters>) => onFiltersChange({ ...filters, ...patch });
 
@@ -171,13 +178,46 @@ function PublicHeader({
         <select
           aria-label="Filtrar por mes"
           value={filters.mes ?? TODOS}
-          onChange={(e) => set({ mes: e.target.value === TODOS ? undefined : e.target.value })}
-          className="h-8 min-w-[140px] rounded-md px-2 text-xs sm:text-sm text-[#002A5C] bg-white outline-none focus:ring-2 focus:ring-white/70 capitalize"
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === TODOS) {
+              set({ mes: undefined });
+              return;
+            }
+            set({ mes: v, desde: undefined, hasta: undefined });
+          }}
+          className="h-8 min-w-[130px] rounded-md px-2 text-xs sm:text-sm text-[#002A5C] bg-white outline-none focus:ring-2 focus:ring-white/70 capitalize"
         >
           <option value={TODOS}>Todos los meses</option>
           {meses.map((m) => (
             <option key={m.value} value={m.value}>
               {m.label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Filtrar por semana"
+          value={selectedWeek}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === TODOS) {
+              set({ desde: undefined, hasta: undefined });
+              return;
+            }
+            const week = semanas.find((s) => s.value === v);
+            if (!week) return;
+            set({
+              desde: week.desde,
+              hasta: week.hasta,
+              mes: undefined,
+            });
+          }}
+          className="h-8 min-w-[180px] max-w-full flex-1 sm:flex-none rounded-md px-2 text-xs sm:text-sm text-[#002A5C] bg-white outline-none focus:ring-2 focus:ring-white/70"
+        >
+          <option value={TODOS}>Todas las semanas</option>
+          {semanas.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </select>

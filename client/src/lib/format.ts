@@ -147,3 +147,36 @@ export function groupByWeek<T>(items: T[], getFecha: (item: T) => string): WeekG
     (a, b) => b.weekStart.getTime() - a.weekStart.getTime()
   );
 }
+
+export interface WeekOption {
+  value: string;
+  label: string;
+  desde: string;
+  hasta: string;
+}
+
+/** Semanas (lun–dom) del año, de la más reciente a la más antigua. */
+export function listWeekOptions(year = new Date().getFullYear()): WeekOption[] {
+  const today = new Date();
+  const lastWeekStart =
+    year === today.getFullYear()
+      ? weekStartMonday(today)
+      : weekStartMonday(new Date(year, 11, 31, 12, 0, 0));
+  let cursor = weekStartMonday(new Date(year, 0, 1, 12, 0, 0));
+  const options: WeekOption[] = [];
+  while (cursor.getTime() <= lastWeekStart.getTime()) {
+    const end = new Date(cursor);
+    end.setDate(end.getDate() + 6);
+    if (cursor.getFullYear() === year || end.getFullYear() === year) {
+      options.push({
+        value: weekKey(cursor),
+        label: formatWeekLabel(cursor),
+        desde: weekKey(cursor),
+        hasta: ymd(end.getFullYear(), end.getMonth() + 1, end.getDate()),
+      });
+    }
+    cursor = new Date(cursor);
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  return options.reverse();
+}
