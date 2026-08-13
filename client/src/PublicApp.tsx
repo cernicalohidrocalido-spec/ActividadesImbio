@@ -2,8 +2,6 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import {
   Card,
   CardContent,
-  Button,
-  ButtonGroup,
   Spinner,
   EmptyState,
   Avatar,
@@ -11,7 +9,6 @@ import {
 import ActivityCard from './components/ActivityCard';
 import ActivityFilters from './components/ActivityFilters';
 import AppNavbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
 import { listActividadesPublico } from './lib/api';
 import { error } from './lib/toast';
 import type { Actividad, ListFilters } from './lib/types';
@@ -47,36 +44,17 @@ export default function PublicApp() {
   const empty = !loading && actividades.length === 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f4fa]">
-      <AppNavbar publicMode />
-      <div className="flex flex-1 min-h-0">
-        <Sidebar view={view} onChange={setView} />
-
-        <main className="flex-1 p-4 sm:p-5 space-y-4 overflow-y-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] flex items-center gap-2">
-                <span aria-hidden>🌿</span> Actividades de áreas verdes
-              </h1>
-              <p className="text-sm text-[#4b5563]">
-                Consulta pública del IMBIO Pabellón de Arteaga · {actividades.length}{' '}
-                actividad(es)
-              </p>
-            </div>
-            <ButtonGroup className="md:hidden">
-              <Button
-                variant={view === 'cards' ? 'primary' : 'secondary'}
-                onPress={() => setView('cards')}
-              >
-                🗂️ Lista
-              </Button>
-              <Button
-                variant={view === 'map' ? 'primary' : 'secondary'}
-                onPress={() => setView('map')}
-              >
-                🗺️ Mapa
-              </Button>
-            </ButtonGroup>
+    <div className="min-h-screen bg-[#f0f4fa]">
+      <AppNavbar publicMode view={view} onViewChange={setView} />
+      <main className="p-4 sm:p-5 space-y-4" style={{ paddingTop: 76 }}>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] flex items-center gap-2">
+              <span aria-hidden>🌿</span> Actividades de áreas verdes
+            </h1>
+            <p className="text-sm text-[#4b5563]">
+              Consulta pública del IMBIO Pabellón de Arteaga · {actividades.length}{' '}
+              actividad(es)
+            </p>
           </div>
 
           <Card>
@@ -126,8 +104,7 @@ export default function PublicApp() {
               ))}
             </div>
           )}
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
