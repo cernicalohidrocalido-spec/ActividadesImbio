@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
@@ -46,6 +46,11 @@ await app.register(fastifyStatic, {
 
 app.get('/api/health', async () => ({ ok: true, ts: new Date().toISOString() }));
 
+await app.register(activityRoutes);
+await app.register(photoRoutes);
+await app.register(reportRoutes);
+await app.register(tiposRoutes);
+
 app.setNotFoundHandler((req, reply) => {
   if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
     return reply.sendFile('index.html', clientDist);
@@ -53,12 +58,7 @@ app.setNotFoundHandler((req, reply) => {
   reply.status(404).send({ error: 'No encontrado' });
 });
 
-await app.register(activityRoutes);
-await app.register(photoRoutes);
-await app.register(reportRoutes);
-await app.register(tiposRoutes);
-
-app.setErrorHandler((err, req, reply) => {
+app.setErrorHandler((err: FastifyError, req, reply) => {
   req.log.error(err);
   const status = err.statusCode ?? 500;
   reply.status(status).send({ error: err.message ?? 'Error interno del servidor' });
