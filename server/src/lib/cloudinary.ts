@@ -7,6 +7,7 @@ function cleanCloudinaryUrl(): string | undefined {
     .trim()
     .replace(/^['"]|['"]$/g, '')
     .replace(/^CLOUDINARY_URL\s*=\s*/i, '')
+    .replace(/[<>]/g, '')
     .trim();
   if (raw.startsWith('cloudinary://')) {
     process.env.CLOUDINARY_URL = raw;

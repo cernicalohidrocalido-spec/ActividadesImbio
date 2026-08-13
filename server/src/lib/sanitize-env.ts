@@ -3,6 +3,7 @@ const raw = (process.env.CLOUDINARY_URL ?? '')
   .trim()
   .replace(/^['"]|['"]$/g, '')
   .replace(/^CLOUDINARY_URL\s*=\s*/i, '')
+  .replace(/[<>]/g, '')
   .trim();
 if (raw && !raw.startsWith('cloudinary://')) {
   console.warn(
