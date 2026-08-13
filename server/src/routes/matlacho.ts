@@ -12,7 +12,7 @@ function buildPrompt(input: z.infer<typeof bodySchema>): string {
   const tipos = input.tipos?.filter(Boolean).join(', ') || '';
   const extra = [
     tipos ? `Tipos de intervención: ${tipos}.` : '',
-    input.colonia ? `Colonia/lugar: ${input.colonia}.` : '',
+    input.colonia ? `Colonia o comunidad: ${input.colonia}.` : '',
     input.nombre ? `Nombre de la actividad: ${input.nombre}.` : '',
   ]
     .filter(Boolean)

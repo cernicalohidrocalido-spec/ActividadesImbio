@@ -76,7 +76,7 @@ function parseDireccion(d: string): DireccionPartes {
     }
   }
   if (segmentos[1]) {
-    const colMatch = segmentos[1].match(/^(?:Col\.|Colonia)\s*(.+)$/i);
+    const colMatch = segmentos[1].match(/^(?:Col\.|Colonia|Comunidad)\s*(.+)$/i);
     partes.colonia = colMatch ? colMatch[1] : segmentos[1];
   }
   if (segmentos[2]) {
@@ -216,6 +216,8 @@ export default function ActivityForm({
     if (tipos.length === 0) return setErrorMsg('Selecciona al menos un tipo de intervención');
     if (!realizadaPor.trim()) return setErrorMsg('Indica quién realizó la actividad');
     const direccion = buildDireccion({ calle, numero, colonia, referencia });
+    if (!calle.trim()) return setErrorMsg('La calle es obligatoria');
+    if (!colonia.trim()) return setErrorMsg('La colonia o comunidad es obligatoria');
     if (!direccion.trim()) return setErrorMsg('La dirección es obligatoria');
     if (!pos) return setErrorMsg('Selecciona la ubicación en el mapa');
     if (!fecha) return setErrorMsg('La fecha es obligatoria');
@@ -501,8 +503,8 @@ export default function ActivityForm({
                     )}
                   </div>
                   <Description className="mb-2">
-                    Haz clic en el mapa o arrastra el pin. Calle, número y colonia se
-                    completan solos; puedes corregirlos abajo.
+                    Haz clic en el mapa o arrastra el pin. Calle, número y colonia o
+                    comunidad se completan solos; puedes corregirlos abajo.
                   </Description>
                   <Suspense
                     fallback={
@@ -552,10 +554,11 @@ export default function ActivityForm({
                   <TextField
                     value={colonia}
                     onChange={(v) => setColonia(extractValue(v))}
+                    isRequired
                     fullWidth
                   >
-                    <Label>Colonia</Label>
-                    <Input placeholder="Se llena al elegir el punto en el mapa" />
+                    <Label>Colonia o Comunidad</Label>
+                    <Input placeholder="Colonia o comunidad" />
                   </TextField>
                   <TextField
                     value={referencia}
