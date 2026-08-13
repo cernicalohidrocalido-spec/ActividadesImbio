@@ -56,6 +56,11 @@ async function saveFoto(
   originalName: string,
   actividadId: number
 ): Promise<{ id: number; url: string; filename: string }> {
+  if (!buffer.length) {
+    throw Object.assign(new Error('La foto llegó vacía. Vuelve a elegir el archivo.'), {
+      statusCode: 400,
+    });
+  }
   if (buffer.length > MAX_FILE_SIZE) {
     throw Object.assign(new Error('Archivo demasiado grande (máx 10MB)'), { statusCode: 413 });
   }
@@ -159,9 +164,13 @@ export async function photoRoutes(app: FastifyInstance) {
         const status = (err as { statusCode?: number }).statusCode ?? 500;
         const raw = err instanceof Error ? err.message : 'Error al subir foto';
         req.log.error(err);
-        const message = /cloudinary|api_key|api key|invalid|signature/i.test(raw)
-          ? 'Cloudinary rechazó la foto. Revisa CLOUDINARY_URL en Render (cloudinary://API_KEY:API_SECRET@CLOUD_NAME).'
-          : raw;
+        let message = raw;
+        if (/invalid api key|unknown api key|invalid signature|must supply api_key|unauthorized/i.test(raw)) {
+          message =
+            'Cloudinary rechazó las credenciales. En Render, CLOUDINARY_URL debe ser cloudinary://API_KEY:API_SECRET@CLOUD_NAME, sin signos < >.';
+        } else if (/invalid image|invalid file|unsupported|corrupt/i.test(raw)) {
+          message = 'La imagen no se pudo leer. Prueba otra foto en JPG o PNG (no HEIC).';
+        }
         return reply.status(status).send({ error: message });
       }
 
