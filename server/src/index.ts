@@ -9,6 +9,7 @@ import { activityRoutes } from './routes/activities.js';
 import { photoRoutes } from './routes/photos.js';
 import { reportRoutes } from './routes/reports.js';
 import { tiposRoutes } from './routes/tipos.js';
+import { ensureDefaultTipos } from './lib/ensure-tipos.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +66,8 @@ app.setErrorHandler((err: FastifyError, req, reply) => {
 });
 
 try {
+  const nTipos = await ensureDefaultTipos();
+  app.log.info(`🏷️  Tipos de intervención: ${nTipos}`);
   await app.listen({ port: PORT, host: HOST });
   app.log.info(`🚀 Server listo en http://${HOST}:${PORT}`);
   app.log.info(`📁 Uploads servidos desde ${UPLOAD_DIR}`);
