@@ -177,3 +177,19 @@ export function downloadReportePDF(filters: ListFilters): void {
 export function downloadReporteExcel(filters: ListFilters): void {
   window.open(`${BASE}/api/reportes/excel${buildReportQuery(filters)}`, '_blank');
 }
+
+export async function mejorarDescripcion(input: {
+  descripcion: string;
+  tipos?: string[];
+  colonia?: string;
+  nombre?: string;
+}): Promise<string> {
+  const res = await fetch(`${BASE}/api/ai/matlacho`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const data = await jsonOrThrow<{ texto: string }>(res);
+  return data.texto;
+}

@@ -34,3 +34,7 @@ services:
         sync: false
       - key: CLOUDINARY_URL
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

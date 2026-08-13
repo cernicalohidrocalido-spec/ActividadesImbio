@@ -21,7 +21,7 @@ import {
 } from '@heroui/react';
 import type { Actividad, ActividadInput, Foto } from '../lib/types';
 import { toInputDate } from '../lib/format';
-import { createActividad, updateActividad, uploadFotos, deleteFoto } from '../lib/api';
+import { createActividad, updateActividad, uploadFotos, deleteFoto, mejorarDescripcion } from '../lib/api';
 import { success, error as toastError } from '../lib/toast';
 import { useTipos } from '../lib/tipos';
 import { reverseGeocode } from '../lib/geocode';
@@ -105,6 +105,9 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [geocoding, setGeocoding] = useState(false);
+  const [matlachoBusy, setMatlachoBusy] = useState(false);
+  const [matlachoSugerencia, setMatlachoSugerencia] = useState<string | null>(null);
+  const [matlachoError, setMatlachoError] = useState<string | null>(null);
   const skipNextPosChange = useRef(true);
 
   // URLs de preview (object URLs) para los archivos pendientes
@@ -151,6 +154,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       setPos(actividad ? { lat: actividad.lat, lng: actividad.lng } : null);
       setFotos(actividad?.fotos ?? []);
       setPendingFiles([]);
+      setMatlachoSugerencia(null);
+      setMatlachoError(null);
       // El próximo cambio de pos es el inicial (cargado de la actividad o null),
       // no debe disparar geocoding automático
       skipNextPosChange.current = true;
@@ -234,6 +239,34 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       success('Foto eliminada');
     } catch (e) {
       toastError('Error al eliminar foto', e instanceof Error ? e.message : '');
+    }
+  }
+
+  async function handleMatlacho() {
+    const texto = descripcion.trim();
+    if (texto.length < 10) {
+      setMatlachoSugerencia(null);
+      setMatlachoError('Escribe al menos una oración y pulsa de nuevo.');
+      return;
+    }
+    setMatlachoBusy(true);
+    setMatlachoError(null);
+    setMatlachoSugerencia(null);
+    try {
+      const tiposLabel = tipos
+        .map((k) => tiposConfig.find((t) => t.key === k)?.label ?? k)
+        .filter(Boolean);
+      const improved = await mejorarDescripcion({
+        descripcion: texto,
+        tipos: tiposLabel,
+        colonia: colonia.trim() || undefined,
+        nombre: nombre.trim() || undefined,
+      });
+      setMatlachoSugerencia(improved);
+    } catch (e) {
+      setMatlachoError(e instanceof Error ? e.message : 'No se pudo mejorar el texto.');
+    } finally {
+      setMatlachoBusy(false);
     }
   }
 
@@ -340,15 +373,57 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                 </div>
 
                 {/* ===== Descripción ===== */}
-                <TextField fullWidth>
-                  <Label>Descripción</Label>
-                  <TextArea
-                    placeholder="Detalles de la actividad..."
-                    value={descripcion}
-                    onChange={(v) => setDescripcion(extractValue(v))}
-                    rows={3}
-                  />
-                </TextField>
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <Label>Descripción</Label>
+                    <button
+                      type="button"
+                      onClick={() => void handleMatlacho()}
+                      disabled={matlachoBusy}
+                      className="text-xs sm:text-sm font-semibold text-[#003B7A] hover:text-[#0057B8] disabled:opacity-60"
+                    >
+                      {matlachoBusy ? '⏳ Matlacho está mejorando…' : '🐭 Matlacho — Mejorar descripción'}
+                    </button>
+                  </div>
+                  <TextField fullWidth>
+                    <TextArea
+                      placeholder="Detalles de la actividad..."
+                      value={descripcion}
+                      onChange={(v) => setDescripcion(extractValue(v))}
+                      rows={3}
+                    />
+                  </TextField>
+                  {matlachoError ? (
+                    <p className="mt-2 text-sm text-[#991b1b] bg-[#fee2e2] border border-[#fca5a5] rounded-lg px-3 py-2">
+                      {matlachoError}
+                    </p>
+                  ) : null}
+                  {matlachoSugerencia ? (
+                    <div className="mt-2 text-sm text-[#1a3a5c] bg-[#E8F1FB] border border-[#B3CFF0] rounded-lg px-3 py-3">
+                      <p className="font-semibold mb-1">🐭 Matlacho sugiere:</p>
+                      <p className="leading-relaxed">{matlachoSugerencia}</p>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          className="px-3 py-1.5 rounded-md bg-[#003B7A] text-white text-xs font-bold"
+                          onClick={() => {
+                            setDescripcion(matlachoSugerencia);
+                            setMatlachoSugerencia(null);
+                          }}
+                        >
+                          ✅ Aplicar
+                        </button>
+                        <button
+                          type="button"
+                          className="px-3 py-1.5 rounded-md bg-[#e5e7eb] text-[#374151] text-xs"
+                          onClick={() => setMatlachoSugerencia(null)}
+                        >
+                          ✕ Cerrar
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
 
                 {/* ===== Tipos de intervención (multi-select con Chips) ===== */}
                 <div>

@@ -9,6 +9,7 @@ import { activityRoutes } from './routes/activities.js';
 import { photoRoutes } from './routes/photos.js';
 import { reportRoutes } from './routes/reports.js';
 import { tiposRoutes } from './routes/tipos.js';
+import { matlachoRoutes } from './routes/matlacho.js';
 import { authRoutes } from './routes/auth.js';
 import { ensureDefaultTipos } from './lib/ensure-tipos.js';
 import { readSession, loadUsers } from './lib/auth.js';
@@ -68,6 +69,7 @@ await app.register(activityRoutes);
 await app.register(photoRoutes);
 await app.register(reportRoutes);
 await app.register(tiposRoutes);
+await app.register(matlachoRoutes);
 
 app.setNotFoundHandler((req, reply) => {
   if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
