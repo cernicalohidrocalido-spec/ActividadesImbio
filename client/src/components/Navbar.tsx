@@ -88,11 +88,11 @@ function PublicHeader({
       label: new Date(year, i, 1).toLocaleDateString('es-MX', { month: 'long' }),
     };
   });
-  const semanas = listWeekOptions(year);
+  const semanas = listWeekOptions(year, filters.mes);
   const selectedWeek =
     filters.desde && filters.hasta
       ? (semanas.find((s) => s.desde === filters.desde && s.hasta === filters.hasta)?.value ??
-        filters.desde)
+        TODOS)
       : TODOS;
 
   const set = (patch: Partial<ListFilters>) => onFiltersChange({ ...filters, ...patch });
@@ -209,7 +209,6 @@ function PublicHeader({
             set({
               desde: week.desde,
               hasta: week.hasta,
-              mes: undefined,
             });
           }}
           className="h-8 min-w-[180px] max-w-full flex-1 sm:flex-none rounded-md px-2 text-xs sm:text-sm text-[#002A5C] bg-white outline-none focus:ring-2 focus:ring-white/70"

@@ -155,19 +155,48 @@ export interface WeekOption {
   hasta: string;
 }
 
-/** Semanas (lun–dom) del año, de la más reciente a la más antigua. */
-export function listWeekOptions(year = new Date().getFullYear()): WeekOption[] {
+/** Semanas (lun–dom) del año, de la más reciente a la más antigua.
+ *  Si se pasa `mes` (YYYY-MM), solo incluye semanas que tocan ese mes. */
+export function listWeekOptions(
+  year = new Date().getFullYear(),
+  mes?: string
+): WeekOption[] {
+  const monthMatch = mes && /^\d{4}-\d{2}$/.test(mes) ? mes : undefined;
+  const filterYear = monthMatch ? Number(monthMatch.slice(0, 4)) : year;
+  const filterMonth = monthMatch ? Number(monthMatch.slice(5, 7)) : null; // 1-12
+
   const today = new Date();
+  const monthFirst = filterMonth
+    ? new Date(filterYear, filterMonth - 1, 1, 0, 0, 0, 0)
+    : null;
+  const monthLast = filterMonth
+    ? new Date(filterYear, filterMonth, 0, 23, 59, 59, 999)
+    : null;
+
   const lastWeekStart =
-    year === today.getFullYear()
+    filterYear === today.getFullYear() && !filterMonth
       ? weekStartMonday(today)
-      : weekStartMonday(new Date(year, 11, 31, 12, 0, 0));
-  let cursor = weekStartMonday(new Date(year, 0, 1, 12, 0, 0));
+      : filterMonth && monthLast
+        ? weekStartMonday(monthLast)
+        : weekStartMonday(new Date(filterYear, 11, 31, 12, 0, 0));
+
+  let cursor = weekStartMonday(
+    filterMonth && monthFirst
+      ? monthFirst
+      : new Date(filterYear, 0, 1, 12, 0, 0)
+  );
+
   const options: WeekOption[] = [];
   while (cursor.getTime() <= lastWeekStart.getTime()) {
     const end = new Date(cursor);
     end.setDate(end.getDate() + 6);
-    if (cursor.getFullYear() === year || end.getFullYear() === year) {
+    const touchesMonth =
+      !monthFirst ||
+      !monthLast ||
+      (cursor.getTime() <= monthLast.getTime() && end.getTime() >= monthFirst.getTime());
+    const touchesYear =
+      cursor.getFullYear() === filterYear || end.getFullYear() === filterYear;
+    if (touchesYear && touchesMonth) {
       options.push({
         value: weekKey(cursor),
         label: formatWeekLabel(cursor),
