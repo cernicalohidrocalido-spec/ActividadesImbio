@@ -326,7 +326,49 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                   <Description>Nombre descriptivo para identificar la actividad.</Description>
                 </TextField>
 
-                {/* ===== Realizada por + Fecha ===== */}
+                {/* ===== Tipos de intervención ===== */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">
+                      Tipos de intervención <span className="text-danger">*</span>
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => setTipoManagerOpen(true)}
+                    >
+                      ⚙️ Gestionar tipos
+                    </Button>
+                  </div>
+                  {tiposLoading ? (
+                    <p className="text-sm text-default-500">Cargando tipos...</p>
+                  ) : tiposActivos.length === 0 ? (
+                    <div className="text-sm text-default-500 bg-default-50 p-3 rounded">
+                      No hay tipos activos. Crea al menos uno con el botón "Gestionar tipos".
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {tiposActivos.map((t) => {
+                        const active = tipos.includes(t.key);
+                        return (
+                          <TipoPill
+                            key={t.key}
+                            color={t.color}
+                            label={t.label}
+                            size="md"
+                            active={active}
+                            onClick={() => toggleTipo(t.key)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                  <Description>
+                    Click para activar/desactivar. Puedes elegir varios.
+                  </Description>
+                </div>
+
+                {/* ===== Equipo / quien realizó + Fecha ===== */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <TextField
                     value={realizadaPor}
@@ -334,8 +376,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     isRequired
                     fullWidth
                   >
-                    <Label>Nombre de quien realizó la actividad</Label>
-                    <Input placeholder="Ej. Juan Pérez" />
+                    <Label>Equipo o nombre de quien realizó la actividad</Label>
+                    <Input placeholder="Ej. Cuadrilla de deshierbe / Ana Karen" />
                   </TextField>
                   <TextField
                     value={fecha}
@@ -443,48 +485,6 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                       </div>
                     </div>
                   ) : null}
-                </div>
-
-                {/* ===== Tipos de intervención (multi-select con Chips) ===== */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium">
-                      Tipos de intervención <span className="text-danger">*</span>
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => setTipoManagerOpen(true)}
-                    >
-                      ⚙️ Gestionar tipos
-                    </Button>
-                  </div>
-                  {tiposLoading ? (
-                    <p className="text-sm text-default-500">Cargando tipos...</p>
-                  ) : tiposActivos.length === 0 ? (
-                    <div className="text-sm text-default-500 bg-default-50 p-3 rounded">
-                      No hay tipos activos. Crea al menos uno con el botón "Gestionar tipos".
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {tiposActivos.map((t) => {
-                        const active = tipos.includes(t.key);
-                        return (
-                          <TipoPill
-                            key={t.key}
-                            color={t.color}
-                            label={t.label}
-                            size="md"
-                            active={active}
-                            onClick={() => toggleTipo(t.key)}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  <Description>
-                    Click para activar/desactivar. Puedes elegir varios.
-                  </Description>
                 </div>
 
                 {/* ===== Ubicación (mapa) ===== */}
