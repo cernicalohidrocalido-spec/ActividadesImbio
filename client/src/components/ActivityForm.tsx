@@ -533,7 +533,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                             alt="foto"
                             loading="lazy"
                             decoding="async"
-                            className="rounded-md object-cover w-20 h-20"
+                            className="rounded-md object-contain w-24 h-24 bg-[#f0f4fa] border border-default-200"
                           />
                           <button
                             type="button"
@@ -592,13 +592,13 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                         {pendingPreviews.map((p, i) => (
                           <div
                             key={i}
-                            className="relative group rounded-md overflow-hidden border border-default-200 bg-default-50 aspect-square"
+                            className="relative group rounded-md overflow-hidden border border-default-200 bg-[#f0f4fa] aspect-square"
                           >
                             <img
                               src={p.url}
                               alt={p.file.name}
                               loading="lazy"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                             <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] px-1.5 py-1 truncate">
                               {p.file.name}

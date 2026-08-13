@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   CardHeader,
@@ -10,6 +11,7 @@ import type { Actividad } from '../lib/types';
 import { formatDate } from '../lib/format';
 import { useTipos } from '../lib/tipos';
 import TipoPill from './TipoPill';
+import PhotoLightbox from './PhotoLightbox';
 
 interface Props {
   actividad: Actividad;
@@ -19,26 +21,32 @@ interface Props {
 
 export default function ActivityCard({ actividad, onEdit, onDelete }: Props) {
   const { getLabel, getColor } = useTipos();
+  const [lightbox, setLightbox] = useState(false);
   const cover = actividad.fotos[0]?.url;
   const more = Math.max(0, actividad.fotos.length - 1);
 
   return (
     <Card className="w-full hover:shadow-md transition-shadow">
       {cover ? (
-        <div className="relative w-full h-44 overflow-hidden rounded-t-large">
+        <button
+          type="button"
+          className="relative w-full bg-[#f0f4fa] rounded-t-large cursor-pointer text-left"
+          onClick={() => setLightbox(true)}
+          aria-label="Ver foto completa"
+        >
           <img
             alt={actividad.nombre}
             src={cover}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover"
+            className="w-full max-h-80 object-contain"
           />
           {more > 0 && (
             <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
               +{more} foto{more > 1 ? 's' : ''}
             </span>
           )}
-        </div>
+        </button>
       ) : (
         <div className="w-full h-20 rounded-t-large bg-gradient-to-br from-[#E8F1FB] to-[#f0f4fa] flex items-center justify-center">
           <p className="text-sm font-medium text-[#003B7A]">Sin fotografías</p>
@@ -93,6 +101,13 @@ export default function ActivityCard({ actividad, onEdit, onDelete }: Props) {
           </Button>
         )}
       </CardFooter>
+      {lightbox && (
+        <PhotoLightbox
+          urls={actividad.fotos.map((f) => f.url)}
+          alt={actividad.nombre}
+          onClose={() => setLightbox(false)}
+        />
+      )}
     </Card>
   );
 }

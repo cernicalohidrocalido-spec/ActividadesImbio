@@ -204,7 +204,7 @@ export default function MapView({
                       src={a.fotos[0].url}
                       alt={a.nombre}
                       loading="lazy"
-                      className="w-full h-28 object-cover rounded-md"
+                      className="w-full max-h-52 object-contain rounded-md bg-[#f0f4fa]"
                     />
                   )}
                   <p className="font-semibold text-sm leading-tight">{a.nombre}</p>
