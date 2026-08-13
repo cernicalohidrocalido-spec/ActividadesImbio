@@ -14,17 +14,17 @@ export default function AppNavbar({ publicMode = false, view, onViewChange }: Pr
   if (publicMode) {
     return (
       <header className="nav-imbio nav-public-fixed flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <img
             src="/logo-pabellon.png"
             alt="H. Ayuntamiento de Pabellón de Arteaga"
             className="h-10 w-10 sm:h-11 sm:w-11 object-contain bg-white rounded-lg p-0.5 shrink-0"
           />
           <div className="min-w-0 leading-tight">
-            <p className="font-bold text-sm sm:text-[0.95rem] truncate">
-              Plataforma IMBIO-Pabellón
+            <p className="font-bold text-[13px] sm:text-[0.95rem] leading-snug">
+              Bitácora Ambiental de Actividades del IMBIO
             </p>
-            <p className="text-[11px] text-white/75 truncate">Consulta pública · Áreas verdes</p>
+            <p className="text-[11px] text-white/80 truncate">Actividades de áreas verdes</p>
           </div>
         </div>
 
@@ -32,20 +32,22 @@ export default function AppNavbar({ publicMode = false, view, onViewChange }: Pr
           <button
             type="button"
             onClick={() => onViewChange?.('cards')}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
+            className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
               view === 'cards' ? 'bg-white text-[#002A5C]' : 'text-white/90 hover:bg-white/10'
             }`}
           >
-            🌿 <span className="hidden xs:inline sm:inline">Actividades</span>
+            🌿{' '}
+            <span className="hidden sm:inline">Actividades de áreas verdes</span>
+            <span className="sm:hidden">Áreas verdes</span>
           </button>
           <button
             type="button"
             onClick={() => onViewChange?.('map')}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
+            className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold ${
               view === 'map' ? 'bg-white text-[#002A5C]' : 'text-white/90 hover:bg-white/10'
             }`}
           >
-            🗺️ <span className="hidden xs:inline sm:inline">Mapa</span>
+            🗺️ <span className="hidden sm:inline">Mapa</span>
           </button>
         </nav>
 

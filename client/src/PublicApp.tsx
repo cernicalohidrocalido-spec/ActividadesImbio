@@ -46,13 +46,13 @@ export default function PublicApp() {
   return (
     <div className="min-h-screen bg-[#f0f4fa]">
       <AppNavbar publicMode view={view} onViewChange={setView} />
-      <main className="p-4 sm:p-5 space-y-4" style={{ paddingTop: 76 }}>
+      <main className="p-4 sm:p-5 space-y-4" style={{ paddingTop: 88 }}>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] flex items-center gap-2">
-              <span aria-hidden>🌿</span> Actividades de áreas verdes
+            <h1 className="text-xl sm:text-2xl font-bold text-[#002A5C] leading-snug">
+              Bitácora Ambiental de Actividades del IMBIO
             </h1>
             <p className="text-sm text-[#4b5563]">
-              Consulta pública del IMBIO Pabellón de Arteaga · {actividades.length}{' '}
+              Actividades de áreas verdes · Consulta pública · {actividades.length}{' '}
               actividad(es)
             </p>
           </div>
