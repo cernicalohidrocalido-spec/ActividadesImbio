@@ -12,6 +12,7 @@ import { tiposRoutes } from './routes/tipos.js';
 import { authRoutes } from './routes/auth.js';
 import { ensureDefaultTipos } from './lib/ensure-tipos.js';
 import { readSession, loadUsers } from './lib/auth.js';
+import { isCloudinaryConfigured } from './lib/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,7 +93,12 @@ try {
   }
   await app.listen({ port: PORT, host: HOST });
   app.log.info(`🚀 Server listo en http://${HOST}:${PORT}`);
-  app.log.info(`📁 Uploads servidos desde ${UPLOAD_DIR}`);
+  if (isCloudinaryConfigured()) {
+    app.log.info('☁️  Fotos → Cloudinary');
+  } else {
+    app.log.warn('⚠️  CLOUDINARY_URL no definida — en producción las fotos fallarán');
+    app.log.info(`📁 Uploads locales desde ${UPLOAD_DIR}`);
+  }
 } catch (err) {
   app.log.error(err);
   process.exit(1);

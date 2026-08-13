@@ -32,3 +32,5 @@ services:
         sync: false
       - key: AUTH_SECRET
         sync: false
+      - key: CLOUDINARY_URL
+        sync: false
