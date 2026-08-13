@@ -9,12 +9,44 @@ import type {
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
+const fetchOpts: RequestInit = { credentials: 'include' };
+
 async function jsonOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `HTTP ${res.status}`);
+    let msg = text || `HTTP ${res.status}`;
+    try {
+      const j = JSON.parse(text) as { error?: string };
+      if (j.error) msg = j.error;
+    } catch {
+      /* texto plano */
+    }
+    throw new Error(msg);
   }
   return res.json() as Promise<T>;
+}
+
+export async function login(
+  username: string,
+  password: string
+): Promise<{ username: string }> {
+  const res = await fetch(`${BASE}/api/login`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return jsonOrThrow<{ ok: boolean; username: string }>(res);
+}
+
+export async function logout(): Promise<void> {
+  const res = await fetch(`${BASE}/api/logout`, { ...fetchOpts, method: 'POST' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+export async function getMe(): Promise<{ username: string }> {
+  const res = await fetch(`${BASE}/api/me`, fetchOpts);
+  return jsonOrThrow<{ username: string }>(res);
 }
 
 function buildQuery(filters: ListFilters): string {
@@ -29,18 +61,19 @@ function buildQuery(filters: ListFilters): string {
 }
 
 export async function listActividades(filters: ListFilters = {}): Promise<Actividad[]> {
-  const res = await fetch(`${BASE}/api/actividades${buildQuery(filters)}`);
+  const res = await fetch(`${BASE}/api/actividades${buildQuery(filters)}`, fetchOpts);
   const data = await jsonOrThrow<{ items: Actividad[]; total: number }>(res);
   return data.items;
 }
 
 export async function getActividad(id: number): Promise<Actividad> {
-  const res = await fetch(`${BASE}/api/actividades/${id}`);
+  const res = await fetch(`${BASE}/api/actividades/${id}`, fetchOpts);
   return jsonOrThrow<Actividad>(res);
 }
 
 export async function createActividad(input: ActividadInput): Promise<Actividad> {
   const res = await fetch(`${BASE}/api/actividades`, {
+    ...fetchOpts,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -53,6 +86,7 @@ export async function updateActividad(
   input: Partial<ActividadInput>
 ): Promise<Actividad> {
   const res = await fetch(`${BASE}/api/actividades/${id}`, {
+    ...fetchOpts,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -61,7 +95,7 @@ export async function updateActividad(
 }
 
 export async function deleteActividad(id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/actividades/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}/api/actividades/${id}`, { ...fetchOpts, method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
@@ -69,6 +103,7 @@ export async function uploadFotos(actividadId: number, files: File[]): Promise<F
   const form = new FormData();
   files.forEach((f) => form.append('fotos', f));
   const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos`, {
+    ...fetchOpts,
     method: 'POST',
     body: form,
   });
@@ -77,7 +112,7 @@ export async function uploadFotos(actividadId: number, files: File[]): Promise<F
 }
 
 export async function deleteFoto(id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/fotos/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}/api/fotos/${id}`, { ...fetchOpts, method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
@@ -85,7 +120,7 @@ export async function deleteFoto(id: number): Promise<void> {
 
 export async function listTipos(activo?: boolean): Promise<TipoConfig[]> {
   const qs = activo === undefined ? '' : `?activo=${activo}`;
-  const res = await fetch(`${BASE}/api/tipos${qs}`);
+  const res = await fetch(`${BASE}/api/tipos${qs}`, fetchOpts);
   const data = await jsonOrThrow<{ items: TipoConfig[]; total: number }>(res);
   return data.items;
 }
@@ -98,6 +133,7 @@ export interface TipoInput {
 
 export async function createTipo(input: TipoInput): Promise<TipoConfig> {
   const res = await fetch(`${BASE}/api/tipos`, {
+    ...fetchOpts,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -110,6 +146,7 @@ export async function updateTipo(
   input: Partial<TipoInput & { activo: boolean }>
 ): Promise<TipoConfig> {
   const res = await fetch(`${BASE}/api/tipos/${id}`, {
+    ...fetchOpts,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -118,7 +155,7 @@ export async function updateTipo(
 }
 
 export async function deleteTipo(id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/tipos/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}/api/tipos/${id}`, { ...fetchOpts, method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 

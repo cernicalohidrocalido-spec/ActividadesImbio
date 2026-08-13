@@ -9,7 +9,9 @@ import { activityRoutes } from './routes/activities.js';
 import { photoRoutes } from './routes/photos.js';
 import { reportRoutes } from './routes/reports.js';
 import { tiposRoutes } from './routes/tipos.js';
+import { authRoutes } from './routes/auth.js';
 import { ensureDefaultTipos } from './lib/ensure-tipos.js';
+import { readSession, loadUsers } from './lib/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +49,20 @@ await app.register(fastifyStatic, {
 
 app.get('/api/health', async () => ({ ok: true, ts: new Date().toISOString() }));
 
+const PUBLIC_API = new Set(['/api/health', '/api/login']);
+
+app.addHook('onRequest', async (req, reply) => {
+  if (req.method === 'OPTIONS') return;
+  const pathOnly = req.url.split('?')[0] ?? '';
+  if (PUBLIC_API.has(pathOnly)) return;
+  const needsAuth = pathOnly.startsWith('/api') || pathOnly.startsWith('/uploads');
+  if (!needsAuth) return;
+  if (!readSession(req)) {
+    return reply.status(401).send({ error: 'No autorizado' });
+  }
+});
+
+await app.register(authRoutes);
 await app.register(activityRoutes);
 await app.register(photoRoutes);
 await app.register(reportRoutes);
@@ -68,6 +84,12 @@ app.setErrorHandler((err: FastifyError, req, reply) => {
 try {
   const nTipos = await ensureDefaultTipos();
   app.log.info(`🏷️  Tipos de intervención: ${nTipos}`);
+  const nUsers = loadUsers().size;
+  if (nUsers === 0) {
+    app.log.warn('⚠️  AUTH_USER/AUTH_PASSWORD no definidos — el login no funcionará');
+  } else {
+    app.log.info(`🔒 Auth activa (${nUsers} usuario(s))`);
+  }
   await app.listen({ port: PORT, host: HOST });
   app.log.info(`🚀 Server listo en http://${HOST}:${PORT}`);
   app.log.info(`📁 Uploads servidos desde ${UPLOAD_DIR}`);
