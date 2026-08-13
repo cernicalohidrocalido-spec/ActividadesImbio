@@ -109,6 +109,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
   const [matlachoSugerencia, setMatlachoSugerencia] = useState<string | null>(null);
   const [matlachoError, setMatlachoError] = useState<string | null>(null);
   const [fotosReady, setFotosReady] = useState(true);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const skipNextPosChange = useRef(true);
 
   // URLs de preview (object URLs) para los archivos pendientes
@@ -162,6 +164,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     setPos(actividad ? { lat: actividad.lat, lng: actividad.lng } : null);
     setFotos(actividad?.fotos ?? []);
     setPendingFiles([]);
+    setPhotoError(null);
+    setPhotoBusy(false);
     setMatlachoSugerencia(null);
     setMatlachoError(null);
     setFotosReady(true);
@@ -295,6 +299,36 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     setTipos((prev) =>
       prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
     );
+  }
+
+  async function addPhotos(list: File[]) {
+    if (list.length === 0) return;
+    const copies = await Promise.all(
+      list.map(async (f) => {
+        const buf = await f.arrayBuffer();
+        return new File([buf], f.name || 'foto.jpg', {
+          type: f.type || 'image/jpeg',
+          lastModified: Date.now(),
+        });
+      })
+    );
+    if (isEdit && actividad) {
+      setPhotoError(null);
+      setPhotoBusy(true);
+      try {
+        const uploaded = await uploadFotos(actividad.id, copies);
+        setFotos((prev) => [...prev, ...uploaded]);
+        success('Foto guardada');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'No se pudo subir la foto';
+        setPhotoError(msg);
+        toastError('Foto no subida', msg);
+      } finally {
+        setPhotoBusy(false);
+      }
+      return;
+    }
+    setPendingFiles((prev) => [...prev, ...copies]);
   }
 
   return (
@@ -564,30 +598,13 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     <input
                       type="file"
                       multiple
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp,image/*,.jpg,.jpeg,.png,.webp"
+                      disabled={photoBusy || saving}
                       onChange={(e) => {
                         const target = e.target as HTMLInputElement;
                         const files = Array.from(target.files ?? []);
                         target.value = '';
-                        if (files.length === 0) return;
-                        if (isEdit && actividad) {
-                          setErrorMsg(null);
-                          setSaving(true);
-                          void uploadFotos(actividad.id, files)
-                            .then((uploaded) => {
-                              setFotos((prev) => [...prev, ...uploaded]);
-                              success('Foto guardada');
-                            })
-                            .catch((err) => {
-                              const msg =
-                                err instanceof Error ? err.message : 'No se pudo subir la foto';
-                              setErrorMsg(msg);
-                              toastError('Foto no subida', msg);
-                            })
-                            .finally(() => setSaving(false));
-                          return;
-                        }
-                        setPendingFiles((prev) => [...prev, ...files]);
+                        void addPhotos(files);
                       }}
                       className="mt-1 block w-full text-sm text-default-700
                         file:mr-3 file:py-1.5 file:px-3
@@ -598,12 +615,19 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                         cursor-pointer"
                     />
                     <span className="text-xs text-default-500 mt-1 block">
-                      {pendingFiles.length > 0
-                        ? `${pendingFiles.length} archivo(s) pendiente(s) — se subirán al guardar`
-                        : isEdit
-                          ? 'La foto se guarda al elegirla. JPG, PNG o WebP.'
-                          : 'JPG, PNG o WebP. Se subirán al crear la actividad.'}
+                      {photoBusy
+                        ? 'Subiendo foto…'
+                        : pendingFiles.length > 0
+                          ? `${pendingFiles.length} archivo(s) pendiente(s) — se subirán al guardar`
+                          : isEdit
+                            ? 'Elige la foto y se guarda sola. JPG, PNG o WebP.'
+                            : 'JPG, PNG o WebP. Se subirán al crear la actividad.'}
                     </span>
+                    {photoError ? (
+                      <p className="mt-2 text-sm text-[#991b1b] bg-[#fee2e2] border border-[#fca5a5] rounded-lg px-3 py-2">
+                        {photoError}
+                      </p>
+                    ) : null}
                   </label>
 
                   {pendingPreviews.length > 0 && (

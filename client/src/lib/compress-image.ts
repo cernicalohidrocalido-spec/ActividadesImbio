@@ -33,9 +33,16 @@ export async function compressImage(file: File): Promise<File> {
     ctx.drawImage(bitmap, 0, 0, width, height);
     bitmap.close();
 
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
+    let quality = JPEG_QUALITY;
+    let blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', quality)
     );
+    while (blob && blob.size > 900_000 && quality > 0.45) {
+      quality -= 0.12;
+      blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', quality)
+      );
+    }
     if (!blob) return file;
 
     const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';

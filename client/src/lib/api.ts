@@ -109,33 +109,27 @@ export async function deleteActividad(id: number): Promise<void> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
-async function fileToBase64(file: File): Promise<string> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.onerror = () => reject(new Error('No se pudo leer la foto'));
-    reader.readAsDataURL(file);
+async function cloneFile(file: File): Promise<File> {
+  const buf = await file.arrayBuffer();
+  const safeName = (file.name || 'foto.jpg').replace(/[^\w.\- ()áéíóúÁÉÍÓÚñÑ]/g, '_') || 'foto.jpg';
+  return new File([buf], safeName, {
+    type: file.type || 'image/jpeg',
+    lastModified: file.lastModified || Date.now(),
   });
-  const comma = dataUrl.indexOf(',');
-  return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
 }
 
 export async function uploadFotos(actividadId: number, files: File[]): Promise<Foto[]> {
   const { compressImage } = await import('./compress-image');
-  const fotos = [];
-  for (const f of files) {
-    const ready = await compressImage(f).catch(() => f);
-    fotos.push({
-      filename: ready.name || 'foto.jpg',
-      mime: ready.type || 'image/jpeg',
-      data: await fileToBase64(ready),
-    });
+  const form = new FormData();
+  for (const original of files) {
+    const copy = await cloneFile(original);
+    const ready = await compressImage(copy).catch(() => copy);
+    form.append('fotos', ready, ready.name || 'foto.jpg');
   }
   const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos`, {
     ...fetchOpts,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fotos }),
+    body: form,
   });
   const data = await jsonOrThrow<{ fotos: Foto[] }>(res);
   if (!data.fotos?.length) {

@@ -118,16 +118,25 @@ export async function photoRoutes(app: FastifyInstance) {
                 error: `Tipo de archivo no permitido. Usa JPG, PNG o WebP.`,
               });
             }
-            const chunks: Buffer[] = [];
-            let total = 0;
-            for await (const chunk of part.file) {
-              total += chunk.length;
-              if (total > MAX_FILE_SIZE) {
-                return reply.status(413).send({ error: 'Archivo demasiado grande (máx 10MB)' });
-              }
-              chunks.push(chunk);
-            }
-            created.push(await saveFoto(Buffer.concat(chunks), part.filename || 'foto.jpg', actividadId));
+            const withBuf = part as typeof part & { toBuffer?: () => Promise<Buffer> };
+            const buffer =
+              typeof withBuf.toBuffer === 'function'
+                ? await withBuf.toBuffer()
+                : await (async () => {
+                    const chunks: Buffer[] = [];
+                    let total = 0;
+                    for await (const chunk of part.file) {
+                      total += chunk.length;
+                      if (total > MAX_FILE_SIZE) {
+                        throw Object.assign(new Error('Archivo demasiado grande (máx 10MB)'), {
+                          statusCode: 413,
+                        });
+                      }
+                      chunks.push(chunk);
+                    }
+                    return Buffer.concat(chunks);
+                  })();
+            created.push(await saveFoto(buffer, part.filename || 'foto.jpg', actividadId));
           }
         } else {
           const parsed = jsonSchema.safeParse(req.body);
