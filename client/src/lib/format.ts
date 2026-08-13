@@ -101,10 +101,23 @@ export function weekStartMonday(date: Date): Date {
 }
 
 export function formatWeekLabel(weekStart: Date): string {
-  const day = weekStart.getDate();
-  const month = weekStart.toLocaleDateString('es-MX', { month: 'long' });
-  const year = weekStart.getFullYear();
-  return `Semana del ${day} de ${month} de ${year}`;
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const startDay = weekStart.getDate();
+  const endDay = weekEnd.getDate();
+  const startMonth = weekStart.toLocaleDateString('es-MX', { month: 'long' });
+  const endMonth = weekEnd.toLocaleDateString('es-MX', { month: 'long' });
+  const startYear = weekStart.getFullYear();
+  const endYear = weekEnd.getFullYear();
+
+  if (startYear !== endYear) {
+    return `Semana del ${startDay} de ${startMonth} de ${startYear} al ${endDay} de ${endMonth} de ${endYear}`;
+  }
+  if (startMonth !== endMonth) {
+    return `Semana del ${startDay} de ${startMonth} al ${endDay} de ${endMonth}`;
+  }
+  return `Semana del ${startDay} al ${endDay} de ${startMonth}`;
 }
 
 export function weekKey(weekStart: Date): string {
