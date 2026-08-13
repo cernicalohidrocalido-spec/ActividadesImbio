@@ -37,7 +37,21 @@ await app.register(fastifyStatic, {
   decorateReply: false,
 });
 
+const clientDist = path.resolve(__dirname, '../../client/dist');
+await app.register(fastifyStatic, {
+  root: clientDist,
+  prefix: '/',
+  wildcard: false,
+});
+
 app.get('/api/health', async () => ({ ok: true, ts: new Date().toISOString() }));
+
+app.setNotFoundHandler((req, reply) => {
+  if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/uploads')) {
+    return reply.sendFile('index.html', clientDist);
+  }
+  reply.status(404).send({ error: 'No encontrado' });
+});
 
 await app.register(activityRoutes);
 await app.register(photoRoutes);
