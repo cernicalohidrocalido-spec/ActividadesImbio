@@ -10,6 +10,12 @@ export interface ListFilters {
   hasta?: string;
 }
 
+export function parseTipos(tipo?: string | string[]): string[] {
+  if (!tipo) return [];
+  const arr = Array.isArray(tipo) ? tipo : tipo.split(',');
+  return arr.map((s) => String(s).trim()).filter(Boolean);
+}
+
 export function buildActividadWhere(f: ListFilters): Prisma.ActividadWhereInput {
   const where: Prisma.ActividadWhereInput = {};
 
@@ -32,14 +38,9 @@ export function buildActividadWhere(f: ListFilters): Prisma.ActividadWhereInput 
     }
     where.fecha = fechaFilter;
   }
-  if (f.tipo) {
-    // Acepta "A,B,C" o ["A","B","C"]
-    const arr = Array.isArray(f.tipo)
-      ? f.tipo
-      : f.tipo.split(',').map((s) => s.trim()).filter(Boolean);
-    if (arr.length > 0) {
-      where.tiposIntervencion = { hasSome: arr };
-    }
+  const tipos = parseTipos(f.tipo);
+  if (tipos.length > 0) {
+    where.tiposIntervencion = { hasSome: tipos };
   }
   if (f.q) where.nombre = { contains: f.q, mode: 'insensitive' };
   return where;

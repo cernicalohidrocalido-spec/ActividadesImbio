@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { renderToBuffer } from '@react-pdf/renderer';
 import ExcelJS from 'exceljs';
 import { prisma } from '../lib/prisma.js';
-import { buildActividadWhere, type ListFilters } from '../lib/filters.js';
+import { buildActividadWhere, parseTipos, type ListFilters } from '../lib/filters.js';
 import { TIPO_COLOR_HEX } from '../lib/tipo-colors.js';
 import { ReporteResumenDocument } from '../lib/pdf.js';
 
@@ -39,7 +39,7 @@ function describeFilters(f: ListFilters, tipoLabels: Map<string, string>): strin
     parts.push(`Mes: ${monthName}`);
   }
   if (f.tipo) {
-    const arr = f.tipo.split(',').map((s) => s.trim()).filter(Boolean);
+    const arr = parseTipos(f.tipo);
     const labels = arr.map((k) => tipoLabels.get(k) ?? k).join(', ');
     parts.push(`Tipos: ${labels}`);
   }
@@ -232,7 +232,7 @@ export async function reportRoutes(app: FastifyInstance) {
         });
       }
       if (filters.tipo) {
-        const arr = filters.tipo.split(',').map((s) => s.trim()).filter(Boolean);
+        const arr = parseTipos(filters.tipo);
         items.push({
           filtro: 'Tipos',
           valor: arr.map((k) => tipoLabels.get(k) ?? k).join(', '),
