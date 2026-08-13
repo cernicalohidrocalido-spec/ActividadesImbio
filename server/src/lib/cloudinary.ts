@@ -3,7 +3,11 @@ import type { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 const FOLDER = 'imbio/areas-verdes';
 
 function cleanCloudinaryUrl(): string | undefined {
-  const raw = (process.env.CLOUDINARY_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+  const raw = (process.env.CLOUDINARY_URL ?? '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/^CLOUDINARY_URL\s*=\s*/i, '')
+    .trim();
   if (raw.startsWith('cloudinary://')) {
     process.env.CLOUDINARY_URL = raw;
     return raw;

@@ -11,8 +11,27 @@ import {
 } from '../lib/cloudinary.js';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './uploads';
-const ALLOWED_MIME = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+const ALLOWED_MIME = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/pjpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
+const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif']);
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+function isAllowedImage(mimetype: string, filename: string): boolean {
+  const mime = (mimetype || '').split(';')[0].trim().toLowerCase();
+  const ext = path.extname(filename || '').toLowerCase();
+  if (ALLOWED_MIME.has(mime)) return true;
+  if ((mime === '' || mime === 'application/octet-stream') && ALLOWED_EXT.has(ext)) {
+    return true;
+  }
+  return false;
+}
 
 function toLocalUrl(filename: string): string {
   return `/uploads/${filename}`;
@@ -57,7 +76,7 @@ export async function photoRoutes(app: FastifyInstance) {
       if (!useCloud && process.env.NODE_ENV === 'production') {
         return reply.status(503).send({
           error:
-            'Falta CLOUDINARY_URL en Render → Environment. Las fotos no se pueden guardar en el plan Free.',
+            'Falta CLOUDINARY_URL. En Render → Environment pega la API Environment variable de Cloudinary (Dashboard → API Keys), con formato cloudinary://API_KEY:API_SECRET@CLOUD_NAME. No uses un enlace https:// de una imagen.',
         });
       }
 
@@ -66,10 +85,10 @@ export async function photoRoutes(app: FastifyInstance) {
 
       for await (const part of parts) {
         if (part.type !== 'file') continue;
-        if (!ALLOWED_MIME.has(part.mimetype)) {
-          return reply
-            .status(400)
-            .send({ error: `Tipo de archivo no permitido: ${part.mimetype}` });
+        if (!isAllowedImage(part.mimetype, part.filename)) {
+          return reply.status(400).send({
+            error: `Tipo de archivo no permitido (${part.mimetype || part.filename || 'desconocido'}). Usa JPG, PNG o WebP.`,
+          });
         }
 
         const ext = path.extname(part.filename) || '.jpg';
@@ -98,7 +117,11 @@ export async function photoRoutes(app: FastifyInstance) {
           created.push({ id: foto.id, url: foto.url, filename: foto.filename });
         } catch (err) {
           const status = (err as { statusCode?: number }).statusCode ?? 500;
-          const message = err instanceof Error ? err.message : 'Error al subir foto';
+          const raw = err instanceof Error ? err.message : 'Error al subir foto';
+          const message =
+            /cloudinary|api_key|api key|invalid/i.test(raw)
+              ? 'Cloudinary rechazó la foto. En Render, CLOUDINARY_URL debe ser cloudinary://API_KEY:API_SECRET@CLOUD_NAME (Dashboard → API Keys).'
+              : raw;
           return reply.status(status).send({ error: message });
         }
       }

@@ -21,7 +21,7 @@ import {
 } from '@heroui/react';
 import type { Actividad, ActividadInput, Foto } from '../lib/types';
 import { toInputDate } from '../lib/format';
-import { createActividad, updateActividad, uploadFotos, deleteFoto, mejorarDescripcion } from '../lib/api';
+import { createActividad, updateActividad, uploadFotos, deleteFoto, mejorarDescripcion, getHealth } from '../lib/api';
 import { success, error as toastError } from '../lib/toast';
 import { useTipos } from '../lib/tipos';
 import { reverseGeocode } from '../lib/geocode';
@@ -108,6 +108,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
   const [matlachoBusy, setMatlachoBusy] = useState(false);
   const [matlachoSugerencia, setMatlachoSugerencia] = useState<string | null>(null);
   const [matlachoError, setMatlachoError] = useState<string | null>(null);
+  const [fotosReady, setFotosReady] = useState(true);
   const skipNextPosChange = useRef(true);
 
   // URLs de preview (object URLs) para los archivos pendientes
@@ -156,6 +157,10 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       setPendingFiles([]);
       setMatlachoSugerencia(null);
       setMatlachoError(null);
+      setFotosReady(true);
+      void getHealth()
+        .then((h) => setFotosReady(h.fotos !== 'none'))
+        .catch(() => setFotosReady(true));
       // El próximo cambio de pos es el inicial (cargado de la actividad o null),
       // no debe disparar geocoding automático
       skipNextPosChange.current = true;
@@ -219,13 +224,26 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
         saved = await createActividad(payload);
       }
       if (pendingFiles.length > 0) {
-        const uploaded = await uploadFotos(saved.id, pendingFiles);
-        saved = { ...saved, fotos: [...saved.fotos, ...uploaded] };
+        try {
+          const uploaded = await uploadFotos(saved.id, pendingFiles);
+          saved = { ...saved, fotos: [...saved.fotos, ...uploaded] };
+        } catch (photoErr) {
+          const photoMsg =
+            photoErr instanceof Error ? photoErr.message : 'No se pudo subir la foto';
+          setErrorMsg(
+            `La actividad se guardó, pero la foto no: ${photoMsg}`
+          );
+          toastError('Foto no subida', photoMsg);
+          onSaved(saved);
+          return;
+        }
       }
       onSaved(saved);
       onOpenChange(false);
     } catch (e) {
-      toastError('Error al guardar', e instanceof Error ? e.message : 'Error desconocido');
+      const msg = e instanceof Error ? e.message : 'Error desconocido';
+      setErrorMsg(msg);
+      toastError('Error al guardar', msg);
     } finally {
       setSaving(false);
     }
@@ -529,6 +547,13 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                     </div>
                   )}
 
+                  {!fotosReady && (
+                    <p className="text-sm bg-warning-50 text-warning-800 border border-warning-200 rounded-md p-2 mb-3">
+                      Falta configurar Cloudinary. En Render → Environment, CLOUDINARY_URL debe
+                      ser <code className="text-xs">cloudinary://API_KEY:API_SECRET@CLOUD_NAME</code>{' '}
+                      (Dashboard de Cloudinary → API Keys). Sin eso la foto no se guarda.
+                    </p>
+                  )}
                   <label className="block">
                     <span className="text-sm font-medium text-default-700 block mb-1">
                       Agregar fotografías

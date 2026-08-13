@@ -50,7 +50,15 @@ await app.register(fastifyStatic, {
   wildcard: false,
 });
 
-app.get('/api/health', async () => ({ ok: true, ts: new Date().toISOString() }));
+app.get('/api/health', async () => ({
+  ok: true,
+  ts: new Date().toISOString(),
+  fotos: isCloudinaryConfigured()
+    ? 'cloudinary'
+    : process.env.NODE_ENV === 'production'
+      ? 'none'
+      : 'local',
+}));
 
 const PUBLIC_API = new Set(['/api/health', '/api/login']);
 

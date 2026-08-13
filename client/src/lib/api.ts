@@ -104,8 +104,11 @@ export async function deleteActividad(id: number): Promise<void> {
 }
 
 export async function uploadFotos(actividadId: number, files: File[]): Promise<Foto[]> {
+  const { compressImage } = await import('./compress-image');
   const form = new FormData();
-  files.forEach((f) => form.append('fotos', f));
+  for (const f of files) {
+    form.append('fotos', await compressImage(f));
+  }
   const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos`, {
     ...fetchOpts,
     method: 'POST',
@@ -113,6 +116,15 @@ export async function uploadFotos(actividadId: number, files: File[]): Promise<F
   });
   const data = await jsonOrThrow<{ fotos: Foto[] }>(res);
   return data.fotos;
+}
+
+export async function getHealth(): Promise<{
+  ok: boolean;
+  ts?: string;
+  fotos?: 'cloudinary' | 'local' | 'none';
+}> {
+  const res = await fetch(`${BASE}/api/health`);
+  return jsonOrThrow(res);
 }
 
 export async function deleteFoto(id: number): Promise<void> {
