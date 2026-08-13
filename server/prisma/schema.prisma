@@ -47,9 +47,11 @@ model Foto {
   id          Int       @id @default(autoincrement())
   url         String
   filename    String
+  /// Menor = se muestra primero en la ficha (0 = portada)
+  orden       Int       @default(0)
   actividadId Int
   actividad   Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
 
-  @@index([actividadId])
+  @@index([actividadId, orden])
 }

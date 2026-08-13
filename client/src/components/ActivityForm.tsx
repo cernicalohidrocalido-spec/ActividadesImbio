@@ -20,8 +20,17 @@ import {
   Spinner,
 } from '@heroui/react';
 import type { Actividad, ActividadInput, Foto } from '../lib/types';
+import { sortFotos } from '../lib/types';
 import { localDateToIso, toInputDate, todayInputDate } from '../lib/format';
-import { createActividad, updateActividad, uploadFotos, deleteFoto, mejorarDescripcion, getHealth } from '../lib/api';
+import {
+  createActividad,
+  updateActividad,
+  uploadFotos,
+  deleteFoto,
+  reorderFotos,
+  mejorarDescripcion,
+  getHealth,
+} from '../lib/api';
 import { success, error as toastError } from '../lib/toast';
 import { useTipos } from '../lib/tipos';
 import { reverseGeocode } from '../lib/geocode';
@@ -43,6 +52,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   actividad: Actividad | null;
   onSaved: (a: Actividad) => void;
+  onPatch?: (a: Actividad) => void;
 }
 
 interface DireccionPartes {
@@ -85,7 +95,13 @@ function buildDireccion(p: DireccionPartes): string {
   return partes.join(', ');
 }
 
-export default function ActivityForm({ open, onOpenChange, actividad, onSaved }: Props) {
+export default function ActivityForm({
+  open,
+  onOpenChange,
+  actividad,
+  onSaved,
+  onPatch,
+}: Props) {
   const isEdit = !!actividad;
   const { tipos: tiposConfig, loading: tiposLoading } = useTipos();
   const [tipoManagerOpen, setTipoManagerOpen] = useState(false);
@@ -155,7 +171,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     setReferencia(partes.referencia);
     setDescripcion(actividad?.descripcion ?? '');
     setPos(actividad ? { lat: actividad.lat, lng: actividad.lng } : null);
-    setFotos(actividad?.fotos ?? []);
+    setFotos(sortFotos(actividad?.fotos ?? []));
     setPendingFiles([]);
     setPhotoError(null);
     setPhotoBusy(false);
@@ -225,7 +241,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       if (pendingFiles.length > 0) {
         try {
           const uploaded = await uploadFotos(saved.id, pendingFiles);
-          saved = { ...saved, fotos: [...saved.fotos, ...uploaded] };
+          saved = { ...saved, fotos: sortFotos([...saved.fotos, ...uploaded]) };
           setPendingFiles([]);
           setFotos(saved.fotos);
         } catch (photoErr) {
@@ -256,6 +272,55 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     } catch (e) {
       toastError('Error al eliminar foto', e instanceof Error ? e.message : '');
     }
+  }
+
+  async function persistFotoOrder(next: Foto[]) {
+    const prev = fotos;
+    setFotos(next);
+    if (!actividad) return;
+    try {
+      const saved = await reorderFotos(
+        actividad.id,
+        next.map((f) => f.id)
+      );
+      const ordered = sortFotos(saved);
+      setFotos(ordered);
+      onPatch?.({ ...actividad, fotos: ordered });
+    } catch (e) {
+      setFotos(prev);
+      toastError(
+        'No se pudo reordenar',
+        e instanceof Error ? e.message : 'Intenta de nuevo'
+      );
+    }
+  }
+
+  function moveFoto(index: number, dir: -1 | 1) {
+    const nextIdx = index + dir;
+    if (nextIdx < 0 || nextIdx >= fotos.length) return;
+    const next = [...fotos];
+    const [item] = next.splice(index, 1);
+    next.splice(nextIdx, 0, item);
+    void persistFotoOrder(next);
+  }
+
+  function makeCover(index: number) {
+    if (index <= 0) return;
+    const next = [...fotos];
+    const [item] = next.splice(index, 1);
+    next.unshift(item);
+    void persistFotoOrder(next);
+  }
+
+  function movePending(index: number, dir: -1 | 1) {
+    setPendingFiles((prev) => {
+      const nextIdx = index + dir;
+      if (nextIdx < 0 || nextIdx >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.splice(nextIdx, 0, item);
+      return next;
+    });
   }
 
   async function handleMatlacho() {
@@ -308,7 +373,7 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
       setPhotoBusy(true);
       try {
         const uploaded = await uploadFotos(actividad.id, copies);
-        setFotos((prev) => [...prev, ...uploaded]);
+        setFotos((prev) => sortFotos([...prev, ...uploaded]));
         success('Foto guardada');
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'No se pudo subir la foto';
@@ -558,28 +623,78 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
 
                 {/* ===== Fotografías ===== */}
                 <div>
-                  <p className="text-sm font-medium mb-2">Fotografías</p>
+                  <p className="text-sm font-medium mb-1">Fotografías</p>
                   {isEdit && fotos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {fotos.map((f) => (
-                        <div key={f.id} className="relative group">
-                          <img
-                            src={f.url}
-                            alt="foto"
-                            loading="lazy"
-                            decoding="async"
-                            className="rounded-md object-contain w-24 h-24 bg-[#f0f4fa] border border-default-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteFoto(f.id)}
-                            className="absolute -top-1 -right-1 bg-danger text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    <>
+                      <p className="text-xs text-default-500 mb-2">
+                        La primera es la portada de la ficha. Usa las flechas o «Portada» para
+                        cambiar el orden.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {fotos.map((f, i) => (
+                          <div
+                            key={f.id}
+                            className={`relative rounded-md border bg-[#f0f4fa] p-1 ${
+                              i === 0 ? 'border-[#003B7A] ring-1 ring-[#003B7A]' : 'border-default-200'
+                            }`}
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                            <img
+                              src={f.url}
+                              alt={i === 0 ? 'Portada' : `Foto ${i + 1}`}
+                              loading="lazy"
+                              decoding="async"
+                              className="rounded object-contain w-24 h-24"
+                            />
+                            {i === 0 ? (
+                              <span className="absolute top-1.5 left-1.5 bg-[#003B7A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                                Portada
+                              </span>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFoto(f.id)}
+                              className="absolute top-1.5 right-1.5 bg-danger text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                              aria-label="Eliminar foto"
+                            >
+                              ×
+                            </button>
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                              <button
+                                type="button"
+                                disabled={i === 0}
+                                onClick={() => moveFoto(i, -1)}
+                                className="h-7 w-7 rounded text-sm font-bold bg-white border border-default-200 text-[#002A5C] disabled:opacity-30"
+                                aria-label="Mover a la izquierda"
+                              >
+                                ←
+                              </button>
+                              {i > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => makeCover(i)}
+                                  className="h-7 px-1.5 rounded text-[10px] font-semibold bg-[#E8F1FB] text-[#003B7A] border border-[#B3CFF0]"
+                                >
+                                  Portada
+                                </button>
+                              ) : (
+                                <span className="h-7 px-1 text-[10px] text-default-400 flex items-center">
+                                  1ª
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                disabled={i === fotos.length - 1}
+                                onClick={() => moveFoto(i, 1)}
+                                className="h-7 w-7 rounded text-sm font-bold bg-white border border-default-200 text-[#002A5C] disabled:opacity-30"
+                                aria-label="Mover a la derecha"
+                              >
+                                →
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
 
                   {!fotosReady && (
@@ -631,35 +746,57 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                   {pendingPreviews.length > 0 && (
                     <div className="mt-3">
                       <p className="text-xs font-medium text-default-600 mb-1.5">
-                        Vista previa (se subirán al guardar):
+                        Vista previa (se subirán al guardar). La primera será la portada:
                       </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {pendingPreviews.map((p, i) => (
                           <div
-                            key={i}
-                            className="relative group rounded-md overflow-hidden border border-default-200 bg-[#f0f4fa] aspect-square"
+                            key={`${p.file.name}-${i}`}
+                            className={`relative rounded-md border bg-[#f0f4fa] p-1 ${
+                              i === 0 ? 'border-[#003B7A] ring-1 ring-[#003B7A]' : 'border-default-200'
+                            }`}
                           >
                             <img
                               src={p.url}
                               alt={p.file.name}
                               loading="lazy"
-                              className="w-full h-full object-contain"
+                              className="w-24 h-24 object-contain rounded"
                             />
-                            <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] px-1.5 py-1 truncate">
-                              {p.file.name}
-                            </div>
+                            {i === 0 ? (
+                              <span className="absolute top-1.5 left-1.5 bg-[#003B7A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                                Portada
+                              </span>
+                            ) : null}
                             <button
                               type="button"
                               onClick={() =>
-                                setPendingFiles((prev) =>
-                                  prev.filter((_, idx) => idx !== i)
-                                )
+                                setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))
                               }
-                              className="absolute top-1 right-1 bg-danger text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                              className="absolute top-1.5 right-1.5 bg-danger text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
                               aria-label={`Quitar ${p.file.name}`}
                             >
                               ×
                             </button>
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                              <button
+                                type="button"
+                                disabled={i === 0}
+                                onClick={() => movePending(i, -1)}
+                                className="h-7 w-7 rounded text-sm font-bold bg-white border border-default-200 text-[#002A5C] disabled:opacity-30"
+                                aria-label="Mover a la izquierda"
+                              >
+                                ←
+                              </button>
+                              <button
+                                type="button"
+                                disabled={i === pendingPreviews.length - 1}
+                                onClick={() => movePending(i, 1)}
+                                className="h-7 w-7 rounded text-sm font-bold bg-white border border-default-200 text-[#002A5C] disabled:opacity-30"
+                                aria-label="Mover a la derecha"
+                              >
+                                →
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

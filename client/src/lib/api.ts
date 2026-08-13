@@ -151,6 +151,17 @@ export async function deleteFoto(id: number): Promise<void> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
+export async function reorderFotos(actividadId: number, ids: number[]): Promise<Foto[]> {
+  const res = await fetch(`${BASE}/api/actividades/${actividadId}/fotos/orden`, {
+    ...fetchOpts,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  const data = await jsonOrThrow<{ fotos: Foto[] }>(res);
+  return data.fotos;
+}
+
 // ===== Tipos de intervención =====
 
 export async function listTipos(activo?: boolean): Promise<TipoConfig[]> {

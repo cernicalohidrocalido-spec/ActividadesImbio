@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
+import { FOTOS_INCLUDE, prisma } from '../lib/prisma.js';
 import { buildActividadWhere } from '../lib/filters.js';
 
 const listQuerySchema = z.object({
@@ -21,7 +21,7 @@ export async function publicoRoutes(app: FastifyInstance) {
     const items = await prisma.actividad.findMany({
       where,
       orderBy: { fecha: 'desc' },
-      include: { fotos: true },
+      include: FOTOS_INCLUDE,
     });
     return { items, total: items.length };
   });

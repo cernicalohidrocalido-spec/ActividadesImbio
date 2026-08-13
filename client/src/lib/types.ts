@@ -46,6 +46,15 @@ export interface Foto {
   id: number;
   url: string;
   filename: string;
+  orden?: number;
+}
+
+export function sortFotos(fotos: Foto[]): Foto[] {
+  return [...fotos].sort((a, b) => {
+    const oa = a.orden ?? a.id;
+    const ob = b.orden ?? b.id;
+    return oa - ob || a.id - b.id;
+  });
 }
 
 export interface Actividad {

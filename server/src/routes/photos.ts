@@ -51,11 +51,19 @@ function toLocalUrl(filename: string): string {
   return `/uploads/${filename}`;
 }
 
+async function nextOrden(actividadId: number): Promise<number> {
+  const last = await prisma.foto.aggregate({
+    where: { actividadId },
+    _max: { orden: true },
+  });
+  return (last._max.orden ?? -1) + 1;
+}
+
 async function saveFoto(
   buffer: Buffer,
   originalName: string,
   actividadId: number
-): Promise<{ id: number; url: string; filename: string }> {
+): Promise<{ id: number; url: string; filename: string; orden: number }> {
   if (!buffer.length) {
     throw Object.assign(new Error('La foto llegó vacía. Vuelve a elegir el archivo.'), {
       statusCode: 400,
@@ -85,10 +93,11 @@ async function saveFoto(
     await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
     url = toLocalUrl(filename);
   }
+  const orden = await nextOrden(actividadId);
   const foto = await prisma.foto.create({
-    data: { url, filename, actividadId },
+    data: { url, filename, actividadId, orden },
   });
-  return { id: foto.id, url: foto.url, filename: foto.filename };
+  return { id: foto.id, url: foto.url, filename: foto.filename, orden: foto.orden };
 }
 
 function decodeDataUrl(raw: string): Buffer {
@@ -111,7 +120,7 @@ export async function photoRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: 'Actividad no encontrada' });
       }
 
-      const created: { id: number; url: string; filename: string }[] = [];
+      const created: { id: number; url: string; filename: string; orden: number }[] = [];
 
       try {
         if (req.isMultipart()) {
@@ -168,6 +177,41 @@ export async function photoRoutes(app: FastifyInstance) {
         });
       }
       return reply.status(201).send({ fotos: created });
+    }
+  );
+
+  app.put<{ Params: { id: string } }>(
+    '/api/actividades/:id/fotos/orden',
+    async (req, reply) => {
+      const actividadId = Number(req.params.id);
+      if (!Number.isFinite(actividadId)) {
+        return reply.status(400).send({ error: 'ID inválido' });
+      }
+      const parsed = z
+        .object({
+          ids: z.array(z.number().int().positive()).min(1).max(40),
+        })
+        .safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: 'Lista de fotos inválida' });
+      }
+      const existing = await prisma.foto.findMany({
+        where: { actividadId },
+        select: { id: true },
+      });
+      const existingIds = new Set(existing.map((f) => f.id));
+      const { ids } = parsed.data;
+      if (ids.length !== existing.length || ids.some((id) => !existingIds.has(id))) {
+        return reply.status(400).send({ error: 'La lista de fotos no coincide.' });
+      }
+      await prisma.$transaction(
+        ids.map((id, i) => prisma.foto.update({ where: { id }, data: { orden: i } }))
+      );
+      const fotos = await prisma.foto.findMany({
+        where: { actividadId },
+        orderBy: [{ orden: 'asc' }, { id: 'asc' }],
+      });
+      return { fotos };
     }
   );
 

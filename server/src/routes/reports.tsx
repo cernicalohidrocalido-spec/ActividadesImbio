@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { renderToBuffer } from '@react-pdf/renderer';
 import ExcelJS from 'exceljs';
-import { prisma } from '../lib/prisma.js';
+import { FOTOS_INCLUDE, prisma } from '../lib/prisma.js';
 import { buildActividadWhere, parseTipos, type ListFilters } from '../lib/filters.js';
 import { TIPO_COLOR_HEX } from '../lib/tipo-colors.js';
 import { ReporteResumenDocument } from '../lib/pdf.js';
@@ -61,7 +61,7 @@ export async function reportRoutes(app: FastifyInstance) {
         prisma.actividad.findMany({
           where,
           orderBy: { fecha: 'asc' },
-          include: { fotos: true },
+          include: FOTOS_INCLUDE,
         }),
         prisma.tipoConfig.findMany(),
       ]);
@@ -102,7 +102,7 @@ export async function reportRoutes(app: FastifyInstance) {
         prisma.actividad.findMany({
           where,
           orderBy: { fecha: 'asc' },
-          include: { fotos: true },
+          include: FOTOS_INCLUDE,
         }),
         prisma.tipoConfig.findMany(),
       ]);

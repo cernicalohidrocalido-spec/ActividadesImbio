@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
+import { FOTOS_INCLUDE, prisma } from '../lib/prisma.js';
 import { buildActividadWhere } from '../lib/filters.js';
 
 const createSchema = z.object({
@@ -37,7 +37,7 @@ export async function activityRoutes(app: FastifyInstance) {
     const items = await prisma.actividad.findMany({
       where,
       orderBy: { fecha: 'desc' },
-      include: { fotos: true },
+      include: FOTOS_INCLUDE,
     });
     return { items, total: items.length };
   });
@@ -47,7 +47,7 @@ export async function activityRoutes(app: FastifyInstance) {
     if (!Number.isFinite(id)) return reply.status(400).send({ error: 'ID inválido' });
     const item = await prisma.actividad.findUnique({
       where: { id },
-      include: { fotos: true },
+      include: FOTOS_INCLUDE,
     });
     if (!item) return reply.status(404).send({ error: 'No encontrada' });
     return item;
@@ -61,7 +61,7 @@ export async function activityRoutes(app: FastifyInstance) {
     const data = parsed.data;
     const created = await prisma.actividad.create({
       data: { ...data, fecha: new Date(data.fecha) },
-      include: { fotos: true },
+      include: FOTOS_INCLUDE,
     });
     return reply.status(201).send(created);
   });
@@ -77,7 +77,7 @@ export async function activityRoutes(app: FastifyInstance) {
     const updated = await prisma.actividad.update({
       where: { id },
       data: { ...rest, ...(fecha ? { fecha: new Date(fecha) } : {}) },
-      include: { fotos: true },
+      include: FOTOS_INCLUDE,
     });
     return updated;
   });

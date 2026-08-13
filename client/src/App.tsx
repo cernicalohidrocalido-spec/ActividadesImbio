@@ -108,9 +108,14 @@ export default function App() {
     }
   }
 
+  function patchActividad(a: Actividad) {
+    setActividades((prev) => prev.map((x) => (x.id === a.id ? { ...x, ...a } : x)));
+    setEditing((cur) => (cur?.id === a.id ? { ...cur, fotos: a.fotos } : cur));
+  }
+
   function handleSaved() {
     success('Actividad guardada');
-    reload();
+    void reload();
   }
 
   function handleDownloadPDF() {
@@ -232,6 +237,7 @@ export default function App() {
         onOpenChange={setFormOpen}
         actividad={editing}
         onSaved={handleSaved}
+        onPatch={patchActividad}
       />
       </main>
       </div>

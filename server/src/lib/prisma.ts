@@ -11,3 +11,7 @@ export const prisma =
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
+
+export const FOTOS_INCLUDE = {
+  fotos: { orderBy: [{ orden: 'asc' as const }, { id: 'asc' as const }] },
+};
