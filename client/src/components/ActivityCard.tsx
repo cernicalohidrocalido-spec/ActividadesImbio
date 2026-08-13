@@ -75,7 +75,7 @@ export default function ActivityCard({ actividad, onEdit, onDelete }: Props) {
           {actividad.direccion}
         </p>
         {actividad.descripcion && (
-          <p className="text-sm text-default-600 line-clamp-2">
+          <p className="text-sm text-default-700 whitespace-pre-wrap break-words leading-relaxed">
             {actividad.descripcion}
           </p>
         )}
