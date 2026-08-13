@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './lib/sanitize-env.js';
 import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
