@@ -374,18 +374,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
 
                 {/* ===== Descripción ===== */}
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <Label>Descripción</Label>
-                    <button
-                      type="button"
-                      onClick={() => void handleMatlacho()}
-                      disabled={matlachoBusy}
-                      className="text-xs sm:text-sm font-semibold text-[#003B7A] hover:text-[#0057B8] disabled:opacity-60"
-                    >
-                      {matlachoBusy ? '⏳ Matlacho está mejorando…' : '🐭 Matlacho — Mejorar descripción'}
-                    </button>
-                  </div>
                   <TextField fullWidth>
+                    <Label>Descripción</Label>
                     <TextArea
                       placeholder="Detalles de la actividad..."
                       value={descripcion}
@@ -393,6 +383,15 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
                       rows={3}
                     />
                   </TextField>
+                  <button
+                    type="button"
+                    onClick={() => void handleMatlacho()}
+                    disabled={matlachoBusy}
+                    className="mt-2.5 w-full py-3 px-3 rounded-[11px] text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70"
+                    style={{ background: 'linear-gradient(135deg,#003B7A,#0057B8)' }}
+                  >
+                    {matlachoBusy ? '⏳ Matlacho está mejorando tu texto…' : '🐭 Matlacho — Mejorar mi descripción'}
+                  </button>
                   {matlachoError ? (
                     <p className="mt-2 text-sm text-[#991b1b] bg-[#fee2e2] border border-[#fca5a5] rounded-lg px-3 py-2">
                       {matlachoError}
