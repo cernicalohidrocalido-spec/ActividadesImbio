@@ -27,28 +27,44 @@ function buildPrompt(input: z.infer<typeof bodySchema>): string {
   );
 }
 
+const GEMINI_MODELS = [
+  process.env.GEMINI_MODEL?.trim(),
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-flash-latest',
+  'gemini-2.0-flash-001',
+].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
+
 async function callGemini(prompt: string, key: string): Promise<string> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 280, temperature: 0.35 },
-      }),
+  let lastErr = 'Gemini no disponible';
+  for (const model of GEMINI_MODELS) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 280, temperature: 0.35 },
+        }),
+      }
+    );
+    const data = (await res.json()) as {
+      error?: { message?: string };
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    if (!res.ok) {
+      lastErr = data.error?.message || `Gemini HTTP ${res.status}`;
+      continue;
     }
-  );
-  const data = (await res.json()) as {
-    error?: { message?: string };
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  if (!res.ok) {
-    throw new Error(data.error?.message || `Gemini HTTP ${res.status}`);
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) {
+      lastErr = 'Matlacho no devolvió texto';
+      continue;
+    }
+    return text.replace(/^["«]+|["»]+$/g, '').trim();
   }
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-  if (!text) throw new Error('Matlacho no devolvió texto');
-  return text.replace(/^["«]+|["»]+$/g, '').trim();
+  throw new Error(lastErr);
 }
 
 async function callAnthropic(prompt: string, key: string): Promise<string> {
