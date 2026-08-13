@@ -144,15 +144,8 @@ export default function ActivityForm({ open, onOpenChange, actividad, onSaved }:
     const partes = parseDireccion(actividad?.direccion ?? '');
     setNombre(actividad?.nombre ?? '');
     const fromActividad = actividad?.tiposIntervencion ?? [];
-    const filtered = fromActividad.filter((k) =>
-      tiposConfig.some((t) => t.key === k && t.activo)
-    );
     setTipos(
-      filtered.length > 0
-        ? filtered
-        : tiposConfig.find((t) => t.activo)?.key
-          ? [tiposConfig.find((t) => t.activo)!.key]
-          : []
+      fromActividad.filter((k) => tiposConfig.some((t) => t.key === k && t.activo))
     );
     setFecha(actividad ? toInputDate(actividad.fecha) : todayInputDate());
     setRealizadaPor(actividad?.realizadaPor ?? '');
