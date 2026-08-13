@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getMe, login as apiLogin, logout as apiLogout } from './api';
+import { isPublicPanelPath } from './public-path';
 
 interface AuthContextValue {
   username: string | null;
@@ -22,6 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (isPublicPanelPath()) {
+      setReady(true);
+      return;
+    }
     getMe()
       .then((me) => setUsername(me.username))
       .catch(() => setUsername(null))

@@ -83,6 +83,13 @@ export default function LoginPage() {
             {busy ? 'Entrando…' : 'Iniciar Sesión'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-[#4b5563] mt-5">
+          ¿Solo quieres consultar las actividades?{' '}
+          <a href="/consulta" className="font-semibold text-[#003B7A] hover:underline">
+            Ver consulta pública
+          </a>
+        </p>
       </div>
     </div>
   );

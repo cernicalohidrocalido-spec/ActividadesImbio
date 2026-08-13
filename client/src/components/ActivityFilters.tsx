@@ -25,8 +25,8 @@ interface Props {
   filters: ListFilters;
   onChange: (f: ListFilters) => void;
   onClear: () => void;
-  onDownloadPDF: () => void;
-  onDownloadExcel: () => void;
+  onDownloadPDF?: () => void;
+  onDownloadExcel?: () => void;
   pdfLoading?: boolean;
   total: number;
 }
@@ -305,25 +305,29 @@ export default function ActivityFilters({
           >
             Limpiar filtros
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={onDownloadExcel}
-            isDisabled={total === 0}
-            className="bg-[#E8F1FB] text-[#002A5C] border-[#B3CFF0] data-[hover=true]:bg-[#d6e7f8]"
-          >
-            📊 Excel
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            isPending={pdfLoading}
-            onPress={onDownloadPDF}
-            isDisabled={!filters.mes}
-            className="bg-[#003B7A] data-[hover=true]:bg-[#0057B8]"
-          >
-            {pdfLoading ? null : '📄  '}Reporte PDF
-          </Button>
+          {onDownloadExcel ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={onDownloadExcel}
+              isDisabled={total === 0}
+              className="bg-[#E8F1FB] text-[#002A5C] border-[#B3CFF0] data-[hover=true]:bg-[#d6e7f8]"
+            >
+              📊 Excel
+            </Button>
+          ) : null}
+          {onDownloadPDF ? (
+            <Button
+              size="sm"
+              variant="primary"
+              isPending={pdfLoading}
+              onPress={onDownloadPDF}
+              isDisabled={!filters.mes}
+              className="bg-[#003B7A] data-[hover=true]:bg-[#0057B8]"
+            >
+              {pdfLoading ? null : '📄  '}Reporte PDF
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

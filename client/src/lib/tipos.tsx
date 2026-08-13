@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { listTipos, createTipo, deleteTipo, updateTipo, type TipoInput } from './api';
+import { listTipos, listTiposPublicos, createTipo, deleteTipo, updateTipo, type TipoInput } from './api';
 import type { TipoConfig } from './types';
 
 interface TiposContextValue {
@@ -16,7 +16,13 @@ interface TiposContextValue {
 
 const TiposContext = createContext<TiposContextValue | null>(null);
 
-export function TiposProvider({ children }: { children: ReactNode }) {
+export function TiposProvider({
+  children,
+  publicOnly = false,
+}: {
+  children: ReactNode;
+  publicOnly?: boolean;
+}) {
   const [tipos, setTipos] = useState<TipoConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,14 +31,14 @@ export function TiposProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await listTipos();
+      const data = publicOnly ? await listTiposPublicos() : await listTipos();
       setTipos(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar tipos');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [publicOnly]);
 
   useEffect(() => {
     refresh();

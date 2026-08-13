@@ -70,6 +70,12 @@ export async function listActividades(filters: ListFilters = {}): Promise<Activi
   return data.items;
 }
 
+export async function listActividadesPublico(filters: ListFilters = {}): Promise<Actividad[]> {
+  const res = await fetch(`${BASE}/api/publico/actividades${buildQuery(filters)}`);
+  const data = await jsonOrThrow<{ items: Actividad[]; total: number }>(res);
+  return data.items;
+}
+
 export async function getActividad(id: number): Promise<Actividad> {
   const res = await fetch(`${BASE}/api/actividades/${id}`, fetchOpts);
   return jsonOrThrow<Actividad>(res);
@@ -137,6 +143,12 @@ export async function deleteFoto(id: number): Promise<void> {
 export async function listTipos(activo?: boolean): Promise<TipoConfig[]> {
   const qs = activo === undefined ? '' : `?activo=${activo}`;
   const res = await fetch(`${BASE}/api/tipos${qs}`, fetchOpts);
+  const data = await jsonOrThrow<{ items: TipoConfig[]; total: number }>(res);
+  return data.items;
+}
+
+export async function listTiposPublicos(): Promise<TipoConfig[]> {
+  const res = await fetch(`${BASE}/api/publico/tipos`);
   const data = await jsonOrThrow<{ items: TipoConfig[]; total: number }>(res);
   return data.items;
 }
