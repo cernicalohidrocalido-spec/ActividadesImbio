@@ -126,3 +126,14 @@ export async function destroyImage(publicId: string): Promise<void> {
   const id = publicId.startsWith(`${FOLDER}/`) ? publicId : `${FOLDER}/${publicId}`;
   await cloudinary.uploader.destroy(id, { resource_type: 'image' });
 }
+
+export async function pingCloudinary(): Promise<'ok' | 'error'> {
+  if (!isCloudinaryConfigured()) return 'error';
+  try {
+    const cloudinary = await getClient();
+    const res = await cloudinary.api.ping();
+    return res?.status === 'ok' ? 'ok' : 'error';
+  } catch {
+    return 'error';
+  }
+}

@@ -15,7 +15,7 @@ import { publicoRoutes } from './routes/publico.js';
 import { authRoutes } from './routes/auth.js';
 import { ensureDefaultTipos } from './lib/ensure-tipos.js';
 import { readSession, loadUsers } from './lib/auth.js';
-import { isCloudinaryConfigured } from './lib/cloudinary.js';
+import { isCloudinaryConfigured, pingCloudinary } from './lib/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,15 +61,21 @@ for (const page of ['/consulta', '/publico', '/login']) {
   app.get(page, async (_req, reply) => sendSpa(reply));
 }
 
-app.get('/api/health', async () => ({
-  ok: true,
-  ts: new Date().toISOString(),
-  fotos: isCloudinaryConfigured()
-    ? 'cloudinary'
-    : process.env.NODE_ENV === 'production'
-      ? 'none'
-      : 'local',
-}));
+app.get('/api/health', async () => {
+  const configured = isCloudinaryConfigured();
+  return {
+    ok: true,
+    ts: new Date().toISOString(),
+    fotoVer: 4,
+    fotos: configured ? 'cloudinary' : process.env.NODE_ENV === 'production' ? 'none' : 'local',
+    cloudinary: configured
+      ? await Promise.race([
+          pingCloudinary(),
+          new Promise<'error'>((resolve) => setTimeout(() => resolve('error'), 4000)),
+        ])
+      : 'none',
+  };
+});
 
 const PUBLIC_API = new Set(['/api/health', '/api/login']);
 
