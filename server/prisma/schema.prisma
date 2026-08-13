@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TipoConfig {
+  id        Int      @id @default(autoincrement())
+  /// Identificador único usado en `Actividad.tiposIntervencion`
+  key       String   @unique
+  /// Etiqueta visible para el usuario
+  label     String
+  /// Color semántico: success | warning | danger | default | accent
+  color     String   @default("default")
+  /// Orden de aparición (menor = primero)
+  order     Int      @default(100)
+  /// Si está inactivo no aparece en los selectores pero se conserva en datos históricos
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activo, order])
+}
+
+model Actividad {
+  id                Int      @id @default(autoincrement())
+  nombre            String
+  /// Claves de TipoConfig (referencias lógicas, no FK para permitir "borrado suave" histórico)
+  tiposIntervencion String[]
+  fecha             DateTime
+  realizadaPor      String
+  direccion         String
+  descripcion       String
+  lat               Float
+  lng               Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  fotos             Foto[]
+
+  @@index([fecha])
+}
+
+model Foto {
+  id          Int       @id @default(autoincrement())
+  url         String
+  filename    String
+  actividadId Int
+  actividad   Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([actividadId])
+}

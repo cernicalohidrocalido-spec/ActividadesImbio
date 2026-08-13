@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+.env
+.env.local
+!.env.example
+
+logs/
+*.log
+
+.vscode/
+.idea/
+.DS_Store
+
+server/uploads/*
+!server/uploads/.gitkeep

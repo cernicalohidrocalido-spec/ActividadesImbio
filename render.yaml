@@ -1,0 +1,28 @@
+# Render Blueprint — Hobby
+# 1) New → Blueprint → este repo
+# 2) Crea el Web Service. Añade un PostgreSQL en el dashboard y pega DATABASE_URL.
+# 3) Custom domain del front: areas-verdes.imbio.info (Pages) o este mismo servicio.
+
+services:
+  - type: web
+    name: actividades-imbio
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: cd server && npx prisma db push --accept-data-loss && node dist/index.js
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: CORS_ORIGIN
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: UPLOAD_DIR
+        value: ./uploads
