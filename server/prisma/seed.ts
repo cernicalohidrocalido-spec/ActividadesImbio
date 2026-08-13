@@ -7,7 +7,7 @@ const TIPOS_DEFAULT = [
   { key: 'LIMPIEZA', label: 'Limpieza', color: 'success', order: 20 },
   { key: 'ORDEN_PODA', label: 'Orden de Poda', color: 'warning', order: 30 },
   { key: 'ORDEN_DERRIBO', label: 'Orden de Derribo', color: 'danger', order: 40 },
-  { key: 'ORDEN_DESHIERBE', label: 'Orden de Deshierbe', color: 'default', order: 50 },
+  { key: 'ORDEN_DESHIERBE', label: 'Orden de Deshierbe', color: 'neutral', order: 50 },
   { key: 'RESCATE_ANIMAL', label: 'Rescate y resguardo de animales', color: 'accent', order: 60 },
 ];
 

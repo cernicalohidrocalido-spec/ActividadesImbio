@@ -11,11 +11,12 @@ const COLORES_PERMITIDOS = [
   'secondary',
   'accent',
   'neutral',
+  'default', // legacy, mismo hex que neutral
 ] as const;
 
 const createSchema = z.object({
   label: z.string().min(1, 'El nombre es obligatorio').max(80),
-  color: z.enum(COLORES_PERMITIDOS).default('default'),
+  color: z.enum(COLORES_PERMITIDOS).default('neutral'),
   order: z.number().int().min(0).max(1000).optional(),
 });
 
